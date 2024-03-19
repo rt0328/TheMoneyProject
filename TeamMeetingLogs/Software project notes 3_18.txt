@@ -1,0 +1,19 @@
+﻿* Stock API
+   * Looking at several options, pretty close to deciding on one
+      * Polygon.io looks like best option
+      * Also look at FinnHub
+   * Day trading more preferable
+   * Finalize by Tuesday
+* Features
+   * Create groups to view friends and rankings
+   * Wireframes are done
+* Status
+   * Once we decide on API and assign tasks tomorrow we should be good, no apparent roadblocks yet
+   * Labs have separate grades for individuals
+   * Week 1 - push deliverables
+   * Deliverables
+      * Team meeting notes
+      * Any new features pushed to github
+      * Due friday, should be graded by Saturday
+   * Graded on personal contributions
+   * Weekly meetings- go through website, talk about new features added and progress
