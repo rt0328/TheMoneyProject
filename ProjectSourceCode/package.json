@@ -1,11 +1,15 @@
 {
-  "name": "projectsourcecode",
+  "name": "the-money-project",
   "version": "1.0.0",
-  "description": "",
+  "description": "CSCI 3308 Lab 1: Initital Setup",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
+  }, 
+  "author": "CU Boulder CSCI 3308",
   "license": "ISC"
 }
+
+
+
