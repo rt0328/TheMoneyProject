@@ -2,3 +2,12 @@ CREATE TABLE users (
     id SERIAL PRIMARY KEY ,
     email VARCHAR(100) NOT NULL
 );
+
+DROP TABLE IF EXISTS stocks;
+
+CREATE TABLE IF NOT EXISTS stocks (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100),
+    symbol VARCHAR(10) NOT NULL,
+    price FLOAT,
+);
