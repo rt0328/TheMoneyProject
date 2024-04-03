@@ -2,7 +2,7 @@ DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
     id SERIAL PRIMARY KEY ,
-    name VARCHAR(100) NOT NULL,
+    username VARCHAR(100) NOT NULL,
     password VARCHAR(64) NOT NULL,
     money FLOAT,
 );
