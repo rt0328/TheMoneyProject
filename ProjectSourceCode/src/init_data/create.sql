@@ -1,8 +1,7 @@
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY ,
-    username VARCHAR(50) NOT NULL,
+    username VARCHAR(50) PRIMARY KEY,
     password VARCHAR(60) NOT NULL,
     money FLOAT,
 );
