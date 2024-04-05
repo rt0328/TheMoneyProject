@@ -37,6 +37,12 @@ app.get('/welcome', (req, res) => {
     res.json({status: 'success', message: 'Welcome!'});
   });
 
+app.get('/portfolio', (req, res) => {
+    // Just provide the name of the view 'home'
+    // The .hbs extension is not required because you've set the default engine to handle it
+    res.render('pages/portfolio');
+});
+
 // -------------------------------------  START THE SERVER   ----------------------------------------------
 
 module.exports = app.listen(3000, () => {
