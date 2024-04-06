@@ -1,12 +1,11 @@
 
-<body>
-    <script src="/js/script.js"></script>
+<body onload="initializePortfolio()">
     <div class="container mt-3">
         <h1>Manage Portfolio</h1>
 
         <div class="container mt-2 bg-light rounded-lg p-5 my-3">
             <label>Current Portofolio Value:</label>
-            <h2>$20,000</h2>
+            <h2 id="portfolioCurrValue"></h2>
         </div>
 
         <table class="table">
@@ -20,27 +19,7 @@
                 <th scope="col">Options</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <th scope="row">1</th>
-                    <td>TSLA</td>
-                    <td>1.0</td>
-                    <td>$168.52</td>
-                    <td>Up 10.6% since yesterday</td>
-                    <td>
-                        <!-- Button for 'Manage Stock' modal -->
-                        <button type="button" class="btn btn-secondary">Manage</button>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">2</th>
-                    <td>Liquidity</td>
-                    <td>-</td>
-                    <td>$2,000.42</td>
-                    <td>-</td>
-                    <td>-</td>
-                </tr>
-            </tbody>
+            <tbody id="assetTableBody"></tbody>
         </table>
 
 

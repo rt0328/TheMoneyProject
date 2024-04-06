@@ -1,37 +1,82 @@
-document.addEventListener('DOMContentLoaded', function () {
-    // Assuming your buttons have unique identifiers like id or data attributes
-    const manageButtons = document.querySelectorAll('.btn-manage');
-  
-    manageButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        // Determine which modal to show based on button clicked
-        // This could be data attributes like 'data-modal-type="purchase"'
-        const modalType = this.getAttribute('data-modal-type');
-        // Call the function to load the modal with the appropriate type
-        showModal(modalType);
-      });
-    });
+const ASSETS = [
+  {
+    id : 123456789,
+    name : 'TSLA',
+    numShares : 1.0,
+    valueInUSD : 125.00,
+  },
+  {
+    id : 111111111,
+    name : 'Liquidity',
+    numShares : null,
+    valueInUSD : 275.00,
+  },
+]
+
+function initializePortfolio() {
+  populateCurrentValue(20100.56);
+  populateAssetTable();
+}
+
+function populateCurrentValue(currValue) {
+  var portfolioCurrValue = document.getElementById('portfolioCurrValue');
+  portfolioCurrValue.innerHTML = `$${currValue}`;
+}
+
+
+function populateAssetTable() {
+  var assetTableBody = document.getElementById('assetTableBody');
+
+  var numRows = 0;
+
+  // For each asset, add row into asset table
+  ASSETS.forEach(asset => {
+
+    // Create new row in table
+    var assetRow = document.createElement('tr');
+
+    // Add numbering to table row
+    var rowNumber = document.createElement('th');
+    rowNumber.innerHTML = numRows + 1;
+    assetRow.appendChild(rowNumber);
+    numRows++;
+
+    // Stock code / asset name 
+    var assetName = document.createElement('td');
+    assetName.innerHTML = asset.name;
+    assetRow.appendChild(assetName);
+
+    // Number of shares
+    var assetNumShares = document.createElement('td');
+    if(asset.numShares){
+      assetNumShares.innerHTML = asset.numShares;
+    }else{
+      assetNumShares.innerHTML = '-';
+    }
+    assetRow.appendChild(assetNumShares);
+
+    // Value in US Dollars
+    var assetValueInUSD = document.createElement('td');
+    assetValueInUSD.innerHTML = asset.valueInUSD;
+    assetRow.appendChild(assetValueInUSD);
+
+    // Growth
+    var assetGrowth = document.createElement('td');
+    assetGrowth.innerHTML = '-';
+    assetRow.appendChild(assetGrowth);
+
+    // Manage Stock Button
+    var optionsCell = document.createElement('td');
+    var manageStockButton = document.createElement('button');
+    manageStockButton.innerHTML = "Manage";
+    manageStockButton.className = "btn btn-secondary";
+    optionsCell.appendChild(manageStockButton);
+    assetRow.appendChild(optionsCell);
+
+
+    // Add row to table body
+    assetTableBody.appendChild(assetRow);
+
   });
-  
-  function showModal(modalType) {
-    // Get the modal content from Handlebars template
-    // Assume we have a function to compile template and pass the context
-    const context = { /* Your data context */ };
-    const html = compileTemplate(modalType, context);
-  
-    // Now insert the HTML into the modal's body and show the modal
-    const modalBody = document.querySelector('#actionModal .modal-body');
-    modalBody.innerHTML = html;
-    // Use Bootstrap's modal method to show it
-    $('#actionModal').modal('show');
-  }
-  
-  function compileTemplate(templateName, context) {
-    // Fetch the template from the DOM
-    const templateSource = document.getElementById(templateName + '-template').innerHTML;
-    // Compile it with Handlebars
-    const template = Handlebars.compile(templateSource);
-    // Return the compiled HTML
-    return template(context);
-  }
-  
+
+}
