@@ -103,15 +103,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.render('pages/login')
+  res.render('pages/login');
 });
 
-app.get('/portfolio', (req, res) => {
-    // Just provide the name of the view 'home'
-    // The .hbs extension is not required because you've set the default engine to handle it
-    res.render('pages/portfolio');
-});
-  
+
 
 
 
@@ -142,7 +137,7 @@ app.post('/login', async (req, res) => {
   const result = await loginUser(username, password);
 
   if (result.status === 'success') {
-      // If the user is found and password matches, redirect to /discover route after setting the session.
+      // If the user is found and password matches, redirect to /portfolio route after setting the session.
       req.session.user = result.user;
       req.session.save(() => {
           res.redirect('/portfolio');
@@ -196,6 +191,7 @@ app.post('/register', async (req, res) => {
 });
 
 app.get('/logout', auth, (req, res) => {
+
   // Destroy the session
   req.session.destroy((err) => {
       if (err) {
@@ -206,4 +202,11 @@ app.get('/logout', auth, (req, res) => {
           res.render('pages/logout', { message: 'Logged out Successfully' });
       }
   });
+});
+
+app.use(auth);
+
+app.get('/portfolio', (req, res) => {
+
+  res.render('pages/portfolio', {loggedIn: true});
 });
