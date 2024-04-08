@@ -13,9 +13,21 @@ const ASSETS = [
   },
 ]
 
+function getAssetById(id) {
+  for (let i = 0; i < ASSETS.length; i++) {
+    if (ASSETS[i].id === id) {
+      return ASSETS[i];
+    }
+  }
+  // If no asset is found with the given ID, return null or handle accordingly
+  return null;
+}
+
+
 function initializePortfolio() {
   populateCurrentValue(20100.56);
   populateAssetTable();
+  initializeActionModal();
 }
 
 function populateCurrentValue(currValue) {
@@ -70,6 +82,7 @@ function populateAssetTable() {
     var manageStockButton = document.createElement('button');
     manageStockButton.innerHTML = "Manage";
     manageStockButton.className = "btn btn-secondary";
+    manageStockButton.setAttribute('onclick', `openActionModal(${asset.id})`);
     optionsCell.appendChild(manageStockButton);
     assetRow.appendChild(optionsCell);
 
@@ -79,4 +92,56 @@ function populateAssetTable() {
 
   });
 
+}
+
+
+
+
+
+let ACTION_MODAL;
+
+function initializeActionModal() {
+  ACTION_MODAL = new bootstrap.Modal(document.getElementById('action-modal'));
+}
+
+
+function openActionModal(id) {
+  console.log('Open Action Modal');
+
+  const submit_button = document.querySelector("#submit_button");
+  const modal_title = document.querySelector(".modal-title");
+
+  let asset = getAssetById(id);
+
+  console.log(asset)
+  console.log(id)
+
+  if (!asset) {
+    asset = {
+      name: "",
+      numShares: 0,
+      valueInUSD: 0,
+    };
+
+    // Update the innerHTML for modalTitle and submitButton
+    // Replace <> with the correct attribute
+    modal_title.innerHTML = "Purchase Stock";
+    submit_button.innerHTML = "Purchase Stock";
+    // Allocate a new event id. Note that nothing is inserted into the CALENDAR_EVENTS yet.
+    // Set the id to be the length of the CALENDAR_EVENTS because we are adding a new element
+    id = ASSETS.length;
+
+  } else {
+    // We will default to "Update Event" as the text for the title and the submit button
+    modal_title.innerHTML = "Manage Asset";
+    submit_button.innerHTML = "Update";
+  }
+
+
+  ACTION_MODAL.show();
+}
+
+function closeActionModal() {
+  console.log('Close Action Modal');
+  ACTION_MODAL.hide();
 }
