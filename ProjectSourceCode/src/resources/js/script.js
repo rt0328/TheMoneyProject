@@ -2,8 +2,8 @@ const ASSETS = [
   {
     id : 123456789,
     name : 'TSLA',
-    numShares : 1.0,
-    valueInUSD : 125.00,
+    numShares : 2.0,
+    valueInUSD : 360.00,
   },
   {
     id : 111111111,
@@ -23,6 +23,21 @@ function getAssetById(id) {
   return null;
 }
 
+// Formats integer into USD format - e.g. 1122230.23 => 1,122,230.23
+function formatDollarAmount(amount) {
+  // Convert amount to string and split it into whole and decimal parts
+  let [wholePart, decimalPart] = String(amount).split('.');
+
+  // Add commas every three digits from the right in the whole part
+  wholePart = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  // If decimalPart exists, concatenate with '.'; otherwise, set it as '00'
+  decimalPart = decimalPart ? '.' + decimalPart : '.00';
+
+  // Return formatted amount
+  return wholePart + decimalPart;
+}
+
 
 function initializePortfolio() {
   populateCurrentValue(20100.56);
@@ -32,7 +47,7 @@ function initializePortfolio() {
 
 function populateCurrentValue(currValue) {
   var portfolioCurrValue = document.getElementById('portfolioCurrValue');
-  portfolioCurrValue.innerHTML = `$${currValue}`;
+  portfolioCurrValue.innerHTML = `$${formatDollarAmount(currValue)}`;
 }
 
 
@@ -134,8 +149,27 @@ function openActionModal(id) {
   } else {
     // We will default to "Update Event" as the text for the title and the submit button
     modal_title.innerHTML = "Manage Asset";
-    submit_button.innerHTML = "Update";
+    submit_button.innerHTML = "Submit Changes";
   }
+
+  // Populate all fields with corresponding information
+  document.querySelector("#asset_full_name").innerHTML = asset.name;
+  document.querySelector("#asset_market_value").innerHTML = `$${formatDollarAmount(180.00)}`;
+  document.querySelector("#asset_name").innerHTML = asset.name;
+  document.querySelector("#num_shares").innerHTML = asset.numShares;
+  document.querySelector("#value_in_usd").innerHTML = `$${formatDollarAmount(asset.valueInUSD)}`;
+
+  var buyButton = document.querySelector("#buy-btn");
+  var sellButton = document.querySelector("#sell-btn");
+
+  if(!asset){
+    sellButton.setAttribute("hidden","");
+  }else{
+    sellButton.removeAttribute("hidden");
+  }
+
+  // const form = document.querySelector("#action-modal form");
+  // form.setAttribute("action", `javascript:updateEventFromModal(${id})`);
 
 
   ACTION_MODAL.show();

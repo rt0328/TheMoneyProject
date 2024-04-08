@@ -183,7 +183,8 @@ app.post('/register', async (req, res) => {
   const success = await insertUser(req.body.username, hash);
 
   if (success) {
-      res.redirect('/login');
+    console.log('Success!');
+    res.redirect('/login');
   } else {
       res.redirect('/register');
   }

@@ -9,28 +9,78 @@
                     </button>
                 </div>
                 <!-- Modal Form -->
-                <form>
+                
                     <!-- Body -->
                     <div class="modal-body">
 
-                        <!-- Asset Name -->
-                        <div class="mb-3">
-                            <label for="asset_name" class="form-label">Asset Name</label>
-                            <input type="text" class="form-control" id="stock_name">
-                        </div>
-
-                        <!-- Number of Shares -->
-                        <div class="mb-3">
-                            <label for="num_shares" class="form-label">Number of Shares</label>
-                            <input type="number" class="form-control" id="num_shares" required>
-                        </div>
-
                         <!-- Value In US Dollars -->
                         <div class="mb-3">
-                            <label for="value_in_usd" class="form-label">Value in USD</label>
-                            <p id="value_in_usd"></p>
+                            <h4 id="asset_full_name"></h4>
+                            <h3 id="asset_market_value"></h3>
                         </div>
 
+
+                        <div class="mb-3">
+                            <h5>Details</h5>
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <td>Stock Code</td>
+                                        <td id="asset_name"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total Value</td>
+                                        <td id="value_in_usd"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Shares Owned</td>
+                                        <td id="num_shares"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <br class="my-4">
+
+
+                        <div id="actn-btn-container" class="d-flex">
+                            <button type="button" class="btn btn-success flex-grow-1 mx-1" id="buy-btn">Buy</button>
+                            <button type="button" class="btn btn-success flex-grow-1 mx-1" id="sell-btn">Sell</button>
+                        </div>
+
+
+                        <div class="mt-3 p-3 bg-light rounded ">
+
+                            <h4>Purchase Shares</h4>
+
+                            <hr/>
+
+                            <h6>Available Liquidity: $12,300.65</h6>
+
+                            <br/>
+
+                            <div class="w-100 d-flex flex-wrap">
+                                <div class="mb-3 flex-grow-1">
+                                    <h6>Value in USD:</h6>
+                                    <p>$20,000</p>
+                                </div>
+
+                                <div class="mb-3 flex-grow-1">
+                                    <h6>Remaining liquidity:</h6>
+                                    <p>$10,000</p>
+                                </div>
+
+                                <div class="mb-3 flex-grow-1">
+                                    <h6>Shares after transaction:</h6>
+                                    <p>4.5</p>
+                                </div>
+
+                            </div>
+
+                            <label>Amount: </label>
+                            <input type="number"/>
+
+                        </div>
 
                     </div>
 
@@ -42,10 +92,10 @@
                         </button>
                         <!-- Submit Btn -->
                         <button id="submit_button" class="btn btn-primary" type="submit">
-                            Create Event
+                            Submit Changes
                         </button>
                     </div>
-            </form>
+            
             </div>
         </div>
     </div>
