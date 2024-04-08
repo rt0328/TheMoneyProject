@@ -6,7 +6,7 @@ const path = require('path');
 const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
-// const bcrypt = require('bcrypt'); //  To hash passwords
+const bcrypt = require('bcrypt'); //  To hash passwords
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -145,7 +145,7 @@ app.post('/login', async (req, res) => {
       // If the user is found and password matches, redirect to /discover route after setting the session.
       req.session.user = result.user;
       req.session.save(() => {
-          res.redirect('/discover');
+          res.redirect('/portfolio');
       });
   } else if (result.status === 'passwordIncorrect') {
       // If the user exists and the password doesn't match, render the login page with a message.
