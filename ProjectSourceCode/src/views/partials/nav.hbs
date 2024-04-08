@@ -4,11 +4,9 @@
       <a class="navbar-brand" href="/"></a>
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-          <!-- TODO: For 'Home', Add a <a> tag with class="nav-link" and href='/' API that navigates to home page if logged in, or login page if not -->
             <a href="/" class="nav-link">Home</a>
         </li>
         <li class="nav-item">
-          <!-- TODO: For 'Courses', Add a <a> tag with class="nav-link" and href='/courses' API that navigates to courses page if logged in, or login page if not -->
             {{#if loggedIn}}
               <a href = "/portfolio" class = "nav-link">Portfolio</a>
             {{/if}}
@@ -19,13 +17,20 @@
 
     <div class="navbar-collapse collapse order-3 dual-collapse2">
       <ul class="navbar-nav ml-auto">
-           <li class="nav-item">
-          <!-- TODO: For 'Log out', Add a <a> tag with class="nav-link" and href='/logout' API that navigates to the logout page -->
-
             {{#if loggedIn}}
-              <a href = "/logout" class = "nav-link"/>Logout</a>
+              <li class="nav-item">
+                <a href = "/logout" class = "nav-link"/>Logout</a>
+              </li>
             {{else}}
-              <a href = "/login" class = "nav-link"/>Login</a>
+              {{#if loginPage}}
+                <li class="nav-item">
+                  <a href = "/register" class = "nav-link">Register</a>
+                </li>
+              {{else}}
+                <li class="nav-item">
+                  <a href = "/login" class = "nav-link"/>Login</a>
+                </li>
+              {{/if}}
             {{/if}}
         </li>
       </ul>
