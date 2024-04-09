@@ -157,8 +157,8 @@ app.get('/welcome', (req, res) => {
 app.get('/register', (req, res) => {
  const message = req.session.message;
   delete req.session.message; // Clear the message from the session after displaying it
-  if(message === "please enter a new password"){
-    res.status(400).render('pages/register', { message: message });
+  if(message === "please enter a password"){
+    res.status(400).render('pages/register', { message: message, error: 1 });
   }
   else{
     res.render('pages/register', { message: message });
@@ -169,7 +169,7 @@ app.get('/register', (req, res) => {
 app.post('/register', async (req, res) => {
   //hash the password using bcrypt library
   if(req.body.password === ''){
-    req.session.message = "please enter a new password";
+    req.session.message = "please enter a password";
     // console.log(req.session.message);
     res.status(400).redirect('/register');
   }
