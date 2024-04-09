@@ -149,9 +149,9 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.get('/welcome', (req, res) => {
-  res.json({ status: 'success', message: 'Welcome!' });
-});
+// app.get('/welcome', (req, res) => {
+//   res.json({ status: 'success', message: 'Welcome!' });
+// });
 
 
 app.get('/register', (req, res) => {
