@@ -163,7 +163,6 @@ app.get('/register', (req, res) => {
   else{
     res.render('pages/register', { message: message });
   }
-  
 });
 
 app.post('/register', async (req, res) => {
