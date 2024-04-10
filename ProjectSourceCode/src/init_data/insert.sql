@@ -1,3 +1,7 @@
+-- Insert a new user (password hashes to examplepassword)
+INSERT INTO users(username, password)
+VALUES ('exampleuser', '$2a$10$Fb5oD61P4mzgC8UXi.oUYOtOyWal7DmLHuXKPasscfAp71hRIJUK.') RETURNING username;
+
 -- Insert a new group
 INSERT INTO groups (admin_user, starting_liquidity, icon_num)
 VALUES ('exampleuser', 100000, 1);
