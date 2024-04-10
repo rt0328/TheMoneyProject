@@ -38,8 +38,8 @@ const {assert, expect} = chai;
 //       .post('/register')
 //       .send({username: 'testname', password: "password"})
 //       .end((err, res) => {
-//         expect(res).to.have.status(200);
-//         res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/);
+//         expect(res).to.have.status(302);
+//         res.should.be.html;
 //         done();
 //       });
 //   });
@@ -56,4 +56,30 @@ const {assert, expect} = chai;
 //       });
 //   });
   
+// });
+
+// describe('Testing Login API', () =>{
+//   it('positive : /login', done => {
+//     chai
+//     .request(server)
+//     .post('/login')
+//     .send({username: "login_test", password: "login_password"})
+//     .end((err, res) =>{
+//       res.should.have.status(200);
+//       res.should.redirectTo(/^.*127\.0\.0\.1.*\/portfolio$/);
+//       done();
+//     });
+//   });
+
+//   it('negative : /login. Checking incorrect password', done=>{
+//     chai
+//     .request(server)
+//     .post('/login')
+//     .send({username: "login_test", password: "other"}) //incorrect password
+//     .end((err, res) =>{
+//       res.should.have.status(400);
+//       res.should.be.html;
+//       done();
+//     });
+//   });
 // });

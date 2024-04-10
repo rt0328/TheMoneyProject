@@ -22,9 +22,9 @@
                 {{#each userStocks}}
                 <tr>
                     <th scope="row">{{@index}}</th>
-                    <td>{{name}}</td>
-                    <td>{{numShares}}</td>
-                    <td>${{valueInUSD}}</td>
+                    <td>{{stock_symbol}}</td>
+                    <td>{{num_shares}}</td>
+                    <td>Value here</td>
                     <td>-</td>
                     <td>
                         <button type="button" class="btn btn-secondary" onclick="openActionModal('{{id}}')">Manage</button>
