@@ -7,6 +7,7 @@ const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
 const bcrypt = require('bcrypt'); //  To hash passwords
+const { error } = require('console');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -138,14 +139,10 @@ app.post('/login', async (req, res) => {
     // If the user exists and the password doesn't match, render the login page with a message.
     res.render('pages/login', { message: 'Incorrect username or password.' });
   } else if (result.status === 'userNotFound') {
-    // If the user is not found, redirect to the registration page.
-    req.session.message = 'User not found. Please register.';
-    req.session.save(() => {
-      res.redirect('/register');
-    });
+    res.status(302).render('pages/register', { message: 'User not found. Please register.', error: 1 });
   } else {
     // For any other errors, render the login page with a generic error message.
-    res.render('pages/login', { message: 'An error occurred. Please try again later.' });
+    res.status(404).render('pages/login', { message: 'An error occurred. Please try again later.' });
   }
 });
 
@@ -155,24 +152,16 @@ app.post('/login', async (req, res) => {
 
 
 app.get('/register', (req, res) => {
- const message = req.session.message;
-  delete req.session.message; // Clear the message from the session after displaying it
-  if(message === "please enter a password"){
-    res.status(400).render('pages/register', { message: message, error: 1 });
-  }
-  else{
-    res.render('pages/register', { message: message });
-  }
+  res.render('pages/register');
 });
 
 app.post('/register', async (req, res) => {
   //hash the password using bcrypt library
-  if(req.body.password === ''){
-    req.session.message = "please enter a password";
+  if (req.body.password === '') {
     // console.log(req.session.message);
-    res.status(400).redirect('/register');
+    res.status(400).render('pages/register', {message: "Please enter a password", error: 1});
   }
-  else{
+  else {
     const hash = await bcrypt.hash(req.body.password, 10)
 
     // To-DO: Insert username and hashed password into the 'users' table
@@ -189,10 +178,9 @@ app.post('/register', async (req, res) => {
     const success = await insertUser(req.body.username, hash);
 
     if (success) {
-      res.redirect('/login');
+      res.status(302).render('pages/login',{message: "User Added Successfully"});
     } else {
-      req.session.message = "please enter a new password";
-      res.redirect('/register');
+      res.status(400).render('pages/register',{message: "Username already taken. Please try a new username.", error: 1});
     }
   }
 });

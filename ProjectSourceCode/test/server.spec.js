@@ -38,8 +38,8 @@ describe('Testing Add User API', () => {
       .post('/register')
       .send({username: 'testname', password: "password"})
       .end((err, res) => {
-        expect(res).to.have.status(200);
-        res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/);
+        expect(res).to.have.status(302);
+        res.should.be.html;
         done();
       });
   });
@@ -50,8 +50,9 @@ describe('Testing Add User API', () => {
       .post('/register')
       .send({username: 'othername', password: ""}) //no password
       .end((err, res) => {
-        expect(res).to.have.status(200);
-        res.should.redirectTo(/^.*127\.0\.0\.1.*\/register$/);
+        expect(res).to.have.status(400);
+        expect(res.text).to.include("Please enter a password");
+        res.should.be.html;
         done();
       });
   });
