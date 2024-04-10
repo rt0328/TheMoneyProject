@@ -136,7 +136,7 @@ app.post('/login', async (req, res) => {
     req.session.user = result.user;
     console.log('Success!')
     req.session.save(() => {
-      res.redirect('/portfolio');
+      res.redirect('/portfolio?portfolioId=1'); // Pass the portfolioId in the query string
     });
   } else if (result.status === 'passwordIncorrect') {
     // If the user exists and the password doesn't match, render the login page with a message.
@@ -170,9 +170,9 @@ app.post('/register', async (req, res) => {
     const hash = await bcrypt.hash(req.body.password, 10)
 
     // To-DO: Insert username and hashed password into the 'users' table
-    const insertUser = async (username, hash, money) => {
+    const insertUser = async (username, hash) => {
       try {
-        await db.none('INSERT INTO users(username, password, money) VALUES ($1, $2, $3)', [username, hash, money]);
+        await db.none('INSERT INTO users(username, password) VALUES ($1, $2)', [username, hash]);
         return true;
       } catch (error) {
         console.error('Error inserting user:', error);
@@ -180,7 +180,7 @@ app.post('/register', async (req, res) => {
       }
     };
 
-    const success = await insertUser(req.body.username, hash,300);
+    const success = await insertUser(req.body.username, hash);
 
     if (success) {
       res.status(302).render('pages/login',{message: "User Added Successfully"});
@@ -220,18 +220,24 @@ app.get('/portfolio', async (req, res) => {
   try {
     // Get user's current liquidity (money in users table)
     const user = req.session.user;
+    const portfolioId = req.query.portfolioId || req.session.portfolioId;
+
+    // Get user data from users table based on session 
     const userData = await db.one('SELECT * FROM users WHERE username = $1', [user.username]);
-    const currentLiquidity = userData.money;
 
-    console.log(userData);
+    // Get portfolio where portfolio_id matches what's passed in req body
+    const portfolioData = await db.one('SELECT * FROM portfolios WHERE portfolio_id = $1', [portfolioId]);
 
-    // Get user's stocks (users_to_stocks table)
-    const userStocks = await db.any('SELECT * FROM users_to_stocks WHERE user_id = $1', [user.username]);
+    // Determine if user matches the owner of the portfolio
+    if(portfolioData.user_id !== userData.username) {
+      // THROW AN ERROR RELATED TO AUTH
+    }
 
-    console.log(userStocks);
+    const stockData = await db.manyOrNone('SELECT * FROM portfolios_to_stocks pts JOIN stocks s ON pts.stock_id = s.stock_id JOIN portfolios p ON pts.portfolio_id = p.portfolio_id WHERE pts.portfolio_id = $1',[portfolioId]);
+
 
     // Calculate current value for each stock
-    for (const stock of userStocks) {
+    for (const stock of stockData) {
       // Get current price for the stock symbol
       console.log(stock.stock_symbol);
       const currentPrice = await getSymbolPrice(stock.stock_symbol);
@@ -241,19 +247,21 @@ app.get('/portfolio', async (req, res) => {
       stock.current_value = currentPrice * stock.num_shares;
     }
 
-    console.log(userStocks);
+    console.log(stockData);
 
     // Calculate total portfolio value
     let currPortfolioValue = 0;
-    for (const stock of userStocks) {
+    for (const stock of stockData) {
       currPortfolioValue += stock.current_value;
     }
+
+    const currentLiquidity = portfolioData.current_liquidity;
 
     // Pass information into the portfolio page
     res.render('pages/portfolio', { 
       loggedIn: true,
       currentLiquidity: currentLiquidity,
-      userStocks: userStocks,
+      userStocks: stockData,
       currPortfolioValue: formatDollarAmount(currPortfolioValue),
     });
   } catch (error) {
