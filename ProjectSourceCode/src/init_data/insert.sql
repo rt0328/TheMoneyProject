@@ -1,0 +1,1 @@
+INSERT INTO users(username, password) VALUES ('login_test', '$2a$10$vq4qQvhkrZ/aUlgeQZij0ODmmT6crzlntcShJV.c1ancNWmGKvTRm');
