@@ -139,7 +139,7 @@ app.post('/login', async (req, res) => {
     });
   } else if (result.status === 'passwordIncorrect') {
     // If the user exists and the password doesn't match, render the login page with a message.
-    res.status(400).render('pages/login', { message: 'Incorrect username or password.' });
+    res.status(400).render('pages/login', { message: 'Incorrect username or password.', error: 1 });
   } else if (result.status === 'userNotFound') {
     
     res.status(302).render('pages/register', { message: 'User not found. Please register.', error: 1 });
