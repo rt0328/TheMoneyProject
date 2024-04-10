@@ -4,13 +4,23 @@
       <a class="navbar-brand" href="/"></a>
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-            <a href="/" class="nav-link">Home</a>
+            <a href="/home" class="nav-link">Home</a>
         </li>
-        <li class="nav-item">
-            {{#if loggedIn}}
-              <a href = "/portfolio" class = "nav-link">Portfolio</a>
+        {{#if loggedIn}}
+            <li class="nav-item">
+                <a href = "/groups" class = "nav-link">My Groups</a>
+            </li>
+            {{#if portfolioPage}}
+                <li class="nav-item">
+                    <a href = "/group" class = "nav-link">My Group</a>
+                </li>
             {{/if}}
-        </li>
+            {{#if groupPage}}
+                <li class="nav-item">
+                    <a href = "/portfolio" class = "nav-link">My Portfolio</a>
+                </li>
+            {{/if}}
+        {{/if}}
       </ul>
     </div>
     
@@ -26,10 +36,17 @@
                 <li class="nav-item">
                   <a href = "/register" class = "nav-link">Register</a>
                 </li>
-              {{else}}
+              {{else if registerPage}}
                 <li class="nav-item">
                   <a href = "/login" class = "nav-link"/>Login</a>
                 </li>
+              {{else}}
+                <li class="nav-item">
+                  <a href = "/register" class = "nav-link">Register</a>
+                </li>
+                <li class="nav-item">
+                  <a href = "/login" class = "nav-link"/>Login</a>
+                </li>`
               {{/if}}
             {{/if}}
         </li>
