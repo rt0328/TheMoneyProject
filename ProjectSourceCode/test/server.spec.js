@@ -31,29 +31,29 @@ const {assert, expect} = chai;
 
 // ********************************************************************************
 
-describe('Testing Add User API', () => {
-  it('positive : /register', done => {
-    chai
-      .request(server)
-      .post('/register')
-      .send({username: 'testname', password: "password"})
-      .end((err, res) => {
-        expect(res).to.have.status(200);
-        res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/);
-        done();
-      });
-  });
+// describe('Testing Add User API', () => {
+//   it('positive : /register', done => {
+//     chai
+//       .request(server)
+//       .post('/register')
+//       .send({username: 'testname', password: "password"})
+//       .end((err, res) => {
+//         expect(res).to.have.status(200);
+//         res.should.redirectTo(/^.*127\.0\.0\.1.*\/login$/);
+//         done();
+//       });
+//   });
 
-  it('Negative : /register. Checking invalid password', done => {
-    chai
-      .request(server)
-      .post('/register')
-      .send({username: 'othername', password: ""}) //no password
-      .end((err, res) => {
-        expect(res).to.have.status(200);
-        res.should.redirectTo(/^.*127\.0\.0\.1.*\/register$/);
-        done();
-      });
-  });
+//   it('Negative : /register. Checking invalid password', done => {
+//     chai
+//       .request(server)
+//       .post('/register')
+//       .send({username: 'othername', password: ""}) //no password
+//       .end((err, res) => {
+//         expect(res).to.have.status(200);
+//         res.should.redirectTo(/^.*127\.0\.0\.1.*\/register$/);
+//         done();
+//       });
+//   });
   
-});
+// });

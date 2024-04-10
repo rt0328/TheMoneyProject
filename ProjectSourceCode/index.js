@@ -165,6 +165,7 @@ app.get('/register', (req, res) => {
   }
 });
 
+
 app.post('/register', async (req, res) => {
   //hash the password using bcrypt library
   if(req.body.password === ''){
@@ -176,9 +177,9 @@ app.post('/register', async (req, res) => {
     const hash = await bcrypt.hash(req.body.password, 10)
 
     // To-DO: Insert username and hashed password into the 'users' table
-    const insertUser = async (username, hash) => {
+    const insertUser = async (username, hash, money) => {
       try {
-        await db.none('INSERT INTO users(username, password) VALUES ($1, $2)', [username, hash]);
+        await db.none('INSERT INTO users(username, password, money) VALUES ($1, $2, $3)', [username, hash, money]);
         return true;
       } catch (error) {
         console.error('Error inserting user:', error);
@@ -186,7 +187,7 @@ app.post('/register', async (req, res) => {
       }
     };
 
-    const success = await insertUser(req.body.username, hash);
+    const success = await insertUser(req.body.username, hash,300);
 
     if (success) {
       res.redirect('/login');
@@ -224,7 +225,25 @@ app.get('/logout', (req, res) => {
 
 
 
-app.get('/portfolio', (req, res) => {
+app.get('/portfolio', async (req, res) => {
+  try {
+    // Get user's current liquidity (money in users table)
+    const user = req.session.user;
+    const userData = await db.one('SELECT * FROM users WHERE username = $1', [user.username]);
+    const currentLiquidity = userData.money;
 
-  res.render('pages/portfolio', { loggedIn: true });
+    // Get user's stocks (users_to_stocks table)
+    const userStocks = await db.any('SELECT * FROM users_to_stocks WHERE user_id = $1', [user.username]);
+
+    // Pass information into the portfolio page
+    res.render('pages/portfolio', { 
+      loggedIn: true,
+      currentLiquidity: currentLiquidity,
+      userStocks: userStocks
+    });
+  } catch (error) {
+    console.error('Error retrieving portfolio data:', error);
+    res.status(500).render('pages/error', { message: 'An error occurred while retrieving portfolio data.' });
+  }
 });
+

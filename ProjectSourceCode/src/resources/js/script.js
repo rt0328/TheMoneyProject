@@ -1,18 +1,3 @@
-const ASSETS = [
-  {
-    id : 123456789,
-    name : 'TSLA',
-    numShares : 2.0,
-    valueInUSD : 360.00,
-  },
-  {
-    id : 111111111,
-    name : 'Liquidity',
-    numShares : null,
-    valueInUSD : 275.00,
-  },
-]
-
 function getAssetById(id) {
   for (let i = 0; i < ASSETS.length; i++) {
     if (ASSETS[i].id === id) {
@@ -40,7 +25,6 @@ function formatDollarAmount(amount) {
 
 
 function initializePortfolio() {
-  populateCurrentValue(20100.56);
   populateAssetTable();
   initializeActionModal();
 }
@@ -51,40 +35,36 @@ function populateCurrentValue(currValue) {
 }
 
 
-function populateAssetTable() {
+function populateAssetTable(userStocks) {
   var assetTableBody = document.getElementById('assetTableBody');
 
   var numRows = 0;
 
   // For each asset, add row into asset table
-  ASSETS.forEach(asset => {
+  userStocks.forEach((asset, index) => {
 
     // Create new row in table
     var assetRow = document.createElement('tr');
 
     // Add numbering to table row
     var rowNumber = document.createElement('th');
-    rowNumber.innerHTML = numRows + 1;
+    rowNumber.innerHTML = index + 1;
     assetRow.appendChild(rowNumber);
     numRows++;
 
-    // Stock code / asset name 
+    // Asset name
     var assetName = document.createElement('td');
     assetName.innerHTML = asset.name;
     assetRow.appendChild(assetName);
 
     // Number of shares
     var assetNumShares = document.createElement('td');
-    if(asset.numShares){
-      assetNumShares.innerHTML = asset.numShares;
-    }else{
-      assetNumShares.innerHTML = '-';
-    }
+    assetNumShares.innerHTML = asset.numShares ? asset.numShares : '-';
     assetRow.appendChild(assetNumShares);
 
     // Value in US Dollars
     var assetValueInUSD = document.createElement('td');
-    assetValueInUSD.innerHTML = asset.valueInUSD;
+    assetValueInUSD.innerHTML = `$${formatDollarAmount(asset.valueInUSD)}`;
     assetRow.appendChild(assetValueInUSD);
 
     // Growth
@@ -101,13 +81,11 @@ function populateAssetTable() {
     optionsCell.appendChild(manageStockButton);
     assetRow.appendChild(optionsCell);
 
-
     // Add row to table body
     assetTableBody.appendChild(assetRow);
-
   });
-
 }
+
 
 
 
