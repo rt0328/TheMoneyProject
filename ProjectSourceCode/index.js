@@ -221,3 +221,47 @@ app.get('/portfolio', (req, res) => {
 });
 
 
+
+// -------------------------------------  API   ----------------------------------------------
+
+require('dotenv').config();
+
+
+// Import the Finnhub module
+const finnhub = require('finnhub');
+
+
+// Function to get the price of a stock symbol
+async function getSymbolPrice(symbol){
+   try {
+       // Retrieve the API key authentication object from the Finnhub API client
+       const api_key = finnhub.ApiClient.instance.authentications['api_key'];
+      
+       // Set the API key from the environment variable
+       api_key.apiKey = process.env.API_KEY;
+
+       // Create a new instance of the Finnhub client
+       const finnhubClient = new finnhub.DefaultApi();
+
+
+       // Fetch the quote for the given symbol and handle the response
+       const data = await new Promise((resolve, reject) => {
+           finnhubClient.quote(symbol, (error, data, response) => {
+               if (error) {
+                   reject(error);
+               } else {
+                   resolve(data);
+               }
+           });
+       });
+       const currentPrice = data.c;
+       //console.log('Current price:', currentPrice);
+
+
+       // You can return or use the current price as needed
+       return currentPrice;
+   } catch(error) {
+       // Log any errors that occur during the API call
+       console.error('error', error);
+   }
+};
