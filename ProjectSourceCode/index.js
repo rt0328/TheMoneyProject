@@ -110,6 +110,8 @@ app.post('/login', async (req, res) => {
     try {
       const user = await db.oneOrNone('SELECT * FROM users WHERE username = $1', [username]);
       if (user) {
+        console.log(password);
+        console.log(user.password);
         const match = await bcrypt.compare(password, user.password);
         if (match) {
           return { status: 'success', user };
@@ -131,14 +133,17 @@ app.post('/login', async (req, res) => {
 
   if (result.status === 'success') {
     // If the user is found and password matches, redirect to /portfolio route after setting the session.
+    console.log('buzz');
     req.session.user = result.user;
     req.session.save(() => {
       res.redirect('/portfolio');
     });
   } else if (result.status === 'passwordIncorrect') {
     // If the user exists and the password doesn't match, render the login page with a message.
-    res.render('pages/login', { message: 'Incorrect username or password.' });
+    console.log('fizz');
+    res.status(400).render('pages/login', { message: 'Incorrect username or password.' });
   } else if (result.status === 'userNotFound') {
+    
     res.status(302).render('pages/register', { message: 'User not found. Please register.', error: 1 });
   } else {
     // For any other errors, render the login page with a generic error message.

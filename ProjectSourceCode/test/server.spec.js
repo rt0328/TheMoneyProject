@@ -44,7 +44,7 @@ describe('Testing Add User API', () => {
       });
   });
 
-  it('Negative : /register. Checking invalid password', done => {
+  it('Negative : /register. Checking empty password', done => {
     chai
       .request(server)
       .post('/register')
@@ -57,4 +57,30 @@ describe('Testing Add User API', () => {
       });
   });
   
+});
+
+describe('Testing Login API', () =>{
+  it('positive : /login', done => {
+    chai
+    .request(server)
+    .post('/login')
+    .send({username: "login_test", password: "login_password"})
+    .end((err, res) =>{
+      res.should.have.status(200);
+      res.should.redirectTo(/^.*127\.0\.0\.1.*\/portfolio$/);
+      done();
+    });
+  });
+
+  it('negative : /login. Checking incorrect password', done=>{
+    chai
+    .request(server)
+    .post('/login')
+    .send({username: "login_test", password: "other"}) //incorrect password
+    .end((err, res) =>{
+      res.should.have.status(400);
+      res.should.be.html;
+      done();
+    });
+  });
 });
