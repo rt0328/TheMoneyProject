@@ -52,6 +52,7 @@ describe('Testing Add User API', () => {
       .end((err, res) => {
         expect(res).to.have.status(400);
         expect(res.text).to.include("Please enter a username and password");
+
         res.should.be.html;
         done();
       });
