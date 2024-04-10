@@ -211,6 +211,7 @@ app.get('/logout', (req, res) => {
       res.send("Error logging out"); // Optionally, handle errors more gracefully
     } else {
       // Session destroyed, render the logout page with a success message
+      loggedIn = false;
       res.render('pages/logout', { logoutPage: true, message: 'Logged out Successfully' });
     }
   });
