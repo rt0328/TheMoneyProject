@@ -1,0 +1,19 @@
+UAT 1: testing that a user can log in with correct credentials
+Test case: a user is asked to enter a username and password of their choice into the login form. Assuming this is their first time on the system, the system will ask them to register an account, then they should be able to log in
+Testing this feature would use test data added to the user table in the users_db database.
+This will be a localhost test
+A successful test will have users access the portfolio page.
+Testers: Ryan, Olivia
+
+UAT 2: testing that a user can purchase/sell stocks
+Test case: Once a user is logged in, they will click on the manage portfolio button, and click add a stock. For this test, they will try to buy one stock of their choice, then sell it.
+Testing this feature would involve adding and removing data to the stock table in the users_db database.
+This can either be done on a localhost or the cloud.
+A successful test will be done when a user can purchase a stock of their choice, view relavent data about the stock, and sell it and recieve their money back.
+Testers: Jake, John
+
+UAT 3: testing that a user can create a group.
+Test case: For this test, we will have two predefined users set up (User A and User B). User A will create a group and invite User B to the group. User B will accept the invatation to the group.
+Testing this feature will involve preset data in users table, and create new data in the group table and users_to_group table. All of these tables are in the users_db database.
+This will be done on a localhost.
+A successful test will have both users entered into a group, where both users are able to view each other's stock purchases and growth.
