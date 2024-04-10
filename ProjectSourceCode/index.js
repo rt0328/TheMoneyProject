@@ -216,7 +216,6 @@ app.get('/logout', (req, res) => {
 });
 
 
-
 app.get('/portfolio', async (req, res) => {
   try {
     // Get user's current liquidity (money in users table)
@@ -229,13 +228,33 @@ app.get('/portfolio', async (req, res) => {
     // Get user's stocks (users_to_stocks table)
     const userStocks = await db.any('SELECT * FROM users_to_stocks WHERE user_id = $1', [user.username]);
 
-    console.log(userStocks)
+    console.log(userStocks);
+
+    // Calculate current value for each stock
+    for (const stock of userStocks) {
+      // Get current price for the stock symbol
+      console.log(stock.stock_symbol);
+      const currentPrice = await getSymbolPrice(stock.stock_symbol);
+      console.log(currentPrice);
+      
+      // Calculate current value for the stock
+      stock.current_value = currentPrice * stock.num_shares;
+    }
+
+    console.log(userStocks);
+
+    // Calculate total portfolio value
+    let currPortfolioValue = 0;
+    for (const stock of userStocks) {
+      currPortfolioValue += stock.current_value;
+    }
 
     // Pass information into the portfolio page
     res.render('pages/portfolio', { 
       loggedIn: true,
       currentLiquidity: currentLiquidity,
-      userStocks: userStocks
+      userStocks: userStocks,
+      currPortfolioValue: formatDollarAmount(currPortfolioValue),
     });
   } catch (error) {
     console.error('Error retrieving portfolio data:', error);
@@ -243,3 +262,64 @@ app.get('/portfolio', async (req, res) => {
   }
 });
 
+
+// -------------------------------------  API   ----------------------------------------------
+
+require('dotenv').config();
+
+
+// Import the Finnhub module
+const finnhub = require('finnhub');
+
+
+// Function to get the price of a stock symbol
+async function getSymbolPrice(symbol){
+   try {
+       // Retrieve the API key authentication object from the Finnhub API client
+       const api_key = finnhub.ApiClient.instance.authentications['api_key'];
+      
+       // Set the API key from the environment variable
+       api_key.apiKey = process.env.API_KEY;
+
+       // Create a new instance of the Finnhub client
+       const finnhubClient = new finnhub.DefaultApi();
+
+
+       // Fetch the quote for the given symbol and handle the response
+       const data = await new Promise((resolve, reject) => {
+           finnhubClient.quote(symbol, (error, data, response) => {
+               if (error) {
+                   reject(error);
+               } else {
+                   resolve(data);
+               }
+           });
+       });
+       const currentPrice = data.c;
+       //console.log('Current price:', currentPrice);
+
+
+       // You can return or use the current price as needed
+       return currentPrice;
+   } catch(error) {
+       // Log any errors that occur during the API call
+       console.error('error', error);
+   }
+};
+
+
+
+// Formats integer into USD format - e.g. 1122230.23 => 1,122,230.23
+function formatDollarAmount(amount) {
+  // Convert amount to string and split it into whole and decimal parts
+  let [wholePart, decimalPart] = String(amount).split('.');
+
+  // Add commas every three digits from the right in the whole part
+  wholePart = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  // If decimalPart exists, concatenate with '.'; otherwise, set it as '00'
+  decimalPart = decimalPart ? '.' + decimalPart : '.00';
+
+  // Return formatted amount
+  return wholePart + decimalPart;
+}

@@ -1,10 +1,10 @@
-<body onload="initializePortfolio()">
+<body onload="initializePortfolio({{userStocks}})">
     <div class="container mt-3">
         <h1>Manage Portfolio</h1>
 
         <div class="container mt-2 bg-light rounded-lg p-5 my-3">
             <label>Current Portfolio Value:</label>
-            <h2 id="portfolioCurrValue"></h2>
+            <h2 id="portfolioCurrValue">${{currPortfolioValue}}</h2>
         </div>
 
         <table class="table">
@@ -24,7 +24,7 @@
                     <th scope="row">{{@index}}</th>
                     <td>{{stock_symbol}}</td>
                     <td>{{num_shares}}</td>
-                    <td>Value here</td>
+                    <td>${{current_value}}</td>
                     <td>-</td>
                     <td>
                         <button type="button" class="btn btn-secondary" onclick="openActionModal('{{id}}')">Manage</button>

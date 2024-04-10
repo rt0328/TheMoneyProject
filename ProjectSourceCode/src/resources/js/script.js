@@ -24,8 +24,9 @@ function formatDollarAmount(amount) {
 }
 
 
-function initializePortfolio() {
-  populateAssetTable();
+function initializePortfolio(userStocks) {
+  console.log(userStocks)
+  //populateAssetTable();
   initializeActionModal();
 }
 
@@ -35,56 +36,56 @@ function populateCurrentValue(currValue) {
 }
 
 
-function populateAssetTable(userStocks) {
-  var assetTableBody = document.getElementById('assetTableBody');
+// function populateAssetTable(userStocks) {
+//   var assetTableBody = document.getElementById('assetTableBody');
 
-  var numRows = 0;
+//   var numRows = 0;
 
-  // For each asset, add row into asset table
-  userStocks.forEach((asset, index) => {
+//   // For each asset, add row into asset table
+//   userStocks.forEach((asset, index) => {
 
-    // Create new row in table
-    var assetRow = document.createElement('tr');
+//     // Create new row in table
+//     var assetRow = document.createElement('tr');
 
-    // Add numbering to table row
-    var rowNumber = document.createElement('th');
-    rowNumber.innerHTML = index + 1;
-    assetRow.appendChild(rowNumber);
-    numRows++;
+//     // Add numbering to table row
+//     var rowNumber = document.createElement('th');
+//     rowNumber.innerHTML = index + 1;
+//     assetRow.appendChild(rowNumber);
+//     numRows++;
 
-    // Asset name
-    var assetName = document.createElement('td');
-    assetName.innerHTML = asset.name;
-    assetRow.appendChild(assetName);
+//     // Asset name
+//     var assetName = document.createElement('td');
+//     assetName.innerHTML = asset.name;
+//     assetRow.appendChild(assetName);
 
-    // Number of shares
-    var assetNumShares = document.createElement('td');
-    assetNumShares.innerHTML = asset.numShares ? asset.numShares : '-';
-    assetRow.appendChild(assetNumShares);
+//     // Number of shares
+//     var assetNumShares = document.createElement('td');
+//     assetNumShares.innerHTML = asset.numShares ? asset.numShares : '-';
+//     assetRow.appendChild(assetNumShares);
 
-    // Value in US Dollars
-    var assetValueInUSD = document.createElement('td');
-    assetValueInUSD.innerHTML = `$${formatDollarAmount(asset.valueInUSD)}`;
-    assetRow.appendChild(assetValueInUSD);
+//     // Value in US Dollars
+//     var assetValueInUSD = document.createElement('td');
+//     assetValueInUSD.innerHTML = `$${formatDollarAmount(asset.valueInUSD)}`;
+//     assetRow.appendChild(assetValueInUSD);
 
-    // Growth
-    var assetGrowth = document.createElement('td');
-    assetGrowth.innerHTML = '-';
-    assetRow.appendChild(assetGrowth);
+//     // Growth
+//     var assetGrowth = document.createElement('td');
+//     assetGrowth.innerHTML = '-';
+//     assetRow.appendChild(assetGrowth);
 
-    // Manage Stock Button
-    var optionsCell = document.createElement('td');
-    var manageStockButton = document.createElement('button');
-    manageStockButton.innerHTML = "Manage";
-    manageStockButton.className = "btn btn-secondary";
-    manageStockButton.setAttribute('onclick', `openActionModal(${asset.id})`);
-    optionsCell.appendChild(manageStockButton);
-    assetRow.appendChild(optionsCell);
+//     // Manage Stock Button
+//     var optionsCell = document.createElement('td');
+//     var manageStockButton = document.createElement('button');
+//     manageStockButton.innerHTML = "Manage";
+//     manageStockButton.className = "btn btn-secondary";
+//     manageStockButton.setAttribute('onclick', `openActionModal(${asset.id})`);
+//     optionsCell.appendChild(manageStockButton);
+//     assetRow.appendChild(optionsCell);
 
-    // Add row to table body
-    assetTableBody.appendChild(assetRow);
-  });
-}
+//     // Add row to table body
+//     assetTableBody.appendChild(assetRow);
+//   });
+// }
 
 
 
