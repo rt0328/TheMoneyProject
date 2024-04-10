@@ -160,8 +160,8 @@ app.get('/register', (req, res) => {
 
 app.post('/register', async (req, res) => {
   //hash the password using bcrypt library
-  if (req.body.password === '') {
-    res.status(400).render('pages/register', {message: "Please enter a password", error: 1});
+  if (req.body.password === '' || req.body.username === '') {
+    res.status(400).render('pages/register', {message: "Please enter a username and password", error: 1});
   }
   else {
     const hash = await bcrypt.hash(req.body.password, 10)
