@@ -51,7 +51,8 @@ describe('Testing Add User API', () => {
       .send({username: 'othername', password: ""}) //no password
       .end((err, res) => {
         expect(res).to.have.status(400);
-        expect(res.text).to.include("Please enter a password");
+        expect(res.text).to.include("Please enter a username and password");
+
         res.should.be.html;
         done();
       });
@@ -67,7 +68,7 @@ describe('Testing Login API', () =>{
     .send({username: "login_test", password: "login_password"})
     .end((err, res) =>{
       res.should.have.status(200);
-      res.should.redirectTo(/^.*127\.0\.0\.1.*\/portfolio$/);
+      res.should.redirectTo(/^.*127\.0\.0\.1.*\/groups/);
       done();
     });
   });
