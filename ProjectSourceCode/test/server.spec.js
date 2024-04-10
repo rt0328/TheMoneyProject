@@ -68,7 +68,7 @@ describe('Testing Login API', () =>{
     .send({username: "login_test", password: "login_password"})
     .end((err, res) =>{
       res.should.have.status(200);
-      res.should.redirectTo(/^.*127\.0\.0\.1.*\/portfolio$/);
+      res.should.redirectTo(/^.*127\.0\.0\.1.*\/groups/);
       done();
     });
   });

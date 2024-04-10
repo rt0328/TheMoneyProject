@@ -95,15 +95,20 @@ module.exports = app.listen(3000, ()=>{
 
 // -------------------------------------  ROUTES   ----------------------------------------------
 
-
+var loggedIn = false;
 
 app.get('/', (req, res) => {
-  res.redirect('/login');
+  res.redirect('/home');
 });
 
 app.get('/login', (req, res) => {
   res.render('pages/login', { loginPage: true });
 });
+
+app.get('/home', (req, res) => {
+    res.render('pages/home', { loggedIn: loggedIn , homePage: true});
+});
+
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
@@ -135,7 +140,7 @@ app.post('/login', async (req, res) => {
     // If the user is found and password matches, redirect to /portfolio route after setting the session.
     req.session.user = result.user;
     req.session.save(() => {
-      res.redirect('/portfolio');
+      res.redirect('/groups');
     });
   } else if (result.status === 'passwordIncorrect') {
     // If the user exists and the password doesn't match, render the login page with a message.
@@ -149,13 +154,8 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// app.get('/welcome', (req, res) => {
-//   res.json({ status: 'success', message: 'Welcome!' });
-// });
-
-
 app.get('/register', (req, res) => {
-  res.render('pages/register');
+  res.render('pages/register', {registerPage: true});
 });
 
 app.post('/register', async (req, res) => {
@@ -192,12 +192,15 @@ app.post('/register', async (req, res) => {
 const auth = (req, res, next) => {
   if (!req.session.user) {
     // Default to login page.
+    loggedIn = false;
     return res.redirect('/login');
   }
   next();
+  loggedIn = true;
 };
 
 app.use(auth);
+
 
 app.get('/logout', (req, res) => {
 
@@ -208,7 +211,7 @@ app.get('/logout', (req, res) => {
       res.send("Error logging out"); // Optionally, handle errors more gracefully
     } else {
       // Session destroyed, render the logout page with a success message
-      res.render('pages/logout', { message: 'Logged out Successfully' });
+      res.render('pages/logout', { logoutPage: true, message: 'Logged out Successfully' });
     }
   });
 });
@@ -216,12 +219,16 @@ app.get('/logout', (req, res) => {
 
 
 app.get('/portfolio', (req, res) => {
-
-  res.render('pages/portfolio', { loggedIn: true });
+  res.render('pages/portfolio', { loggedIn: true, portfolioPage: true });
 });
 
+app.get('/groups', (req, res) => {
+  res.render('pages/groups', { loggedIn: true, groupsPage: true });
+});
 
-
+app.get('/group', (req, res) => {
+  res.render('pages/group', { loggedIn: true, groupPage: true });
+});
 // -------------------------------------  API   ----------------------------------------------
 
 require('dotenv').config();
@@ -236,7 +243,7 @@ async function getSymbolPrice(symbol){
    try {
        // Retrieve the API key authentication object from the Finnhub API client
        const api_key = finnhub.ApiClient.instance.authentications['api_key'];
-      
+
        // Set the API key from the environment variable
        api_key.apiKey = process.env.API_KEY;
 
