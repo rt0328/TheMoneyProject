@@ -44,19 +44,21 @@ const {assert, expect} = chai;
 //       });
 //   });
 
-//   it('Negative : /register. Checking invalid password', done => {
+//   it('Negative : /register. Checking empty password', done => {
 //     chai
 //       .request(server)
 //       .post('/register')
 //       .send({username: 'othername', password: ""}) //no password
 //       .end((err, res) => {
-//         expect(res).to.have.status(200);
-//         res.should.redirectTo(/^.*127\.0\.0\.1.*\/register$/);
+//         expect(res).to.have.status(400);
+//         expect(res.text).to.include("Please enter a username and password");
+
+//         res.should.be.html;
 //         done();
 //       });
 //   });
   
-// });
+
 
 // describe('Testing Login API', () =>{
 //   it('positive : /login', done => {
@@ -66,10 +68,11 @@ const {assert, expect} = chai;
 //     .send({username: "login_test", password: "login_password"})
 //     .end((err, res) =>{
 //       res.should.have.status(200);
-//       res.should.redirectTo(/^.*127\.0\.0\.1.*\/portfolio$/);
+//       res.should.redirectTo(/^.*127\.0\.0\.1.*\/groups/);
 //       done();
 //     });
 //   });
+// });
 
 //   it('negative : /login. Checking incorrect password', done=>{
 //     chai
