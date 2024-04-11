@@ -8,7 +8,7 @@ const chai = require('chai'); // Chai HTTP provides an interface for live integr
 const chaiHttp = require('chai-http');
 chai.should();
 chai.use(chaiHttp);
-const {assert, expect} = chai;
+const { assert, expect } = chai;
 
 // ********************** DEFAULT WELCOME TESTCASE ****************************
 
@@ -32,11 +32,11 @@ const {assert, expect} = chai;
 // ********************************************************************************
 
 describe('Testing Add User API', () => {
-  it('positive : /register', done => {
+  it('Positive : /register', done => {
     chai
       .request(server)
       .post('/register')
-      .send({username: 'testname', password: "password"})
+      .send({ username: 'testname', password: "password" })
       .end((err, res) => {
         expect(res).to.have.status(302);
         res.should.be.html;
@@ -48,7 +48,7 @@ describe('Testing Add User API', () => {
     chai
       .request(server)
       .post('/register')
-      .send({username: 'othername', password: ""}) //no password
+      .send({ username: 'othername', password: "" }) //no password
       .end((err, res) => {
         expect(res).to.have.status(400);
         expect(res.text).to.include("Please enter a username and password");
@@ -57,32 +57,30 @@ describe('Testing Add User API', () => {
         done();
       });
   });
-  
+});
 
-
-describe('Testing Login API', () =>{
-  it('positive : /login', done => {
+describe('Testing Login API', () => {
+  it('Positive : /login', done => {
     chai
-    .request(server)
-    .post('/login')
-    .send({username: "exampleuser", password: "examplepassword"})
-    .end((err, res) =>{
-      res.should.have.status(200);
-      res.should.redirectTo(/^.*127\.0\.0\.1.*\/groups/);
-      done();
-    });
+      .request(server)
+      .post('/login')
+      .send({ username: "exampleuser", password: "examplepassword" })
+      .end((err, res) => {
+        res.should.have.status(200);
+        res.should.redirectTo(/^.*127\.0\.0\.1.*\/groups/);
+        done();
+      });
+  });
+  it('Negative : /login. Checking incorrect password', done => {
+    chai
+      .request(server)
+      .post('/login')
+      .send({ username: "exampleuser", password: "other" }) //incorrect password
+      .end((err, res) => {
+        res.should.have.status(400);
+        res.should.be.html;
+        done();
+      });
   });
 });
 
-  it('negative : /login. Checking incorrect password', done=>{
-    chai
-    .request(server)
-    .post('/login')
-    .send({username: "exampleuser", password: "other"}) //incorrect password
-    .end((err, res) =>{
-      res.should.have.status(400);
-      res.should.be.html;
-      done();
-    });
-  });
-});

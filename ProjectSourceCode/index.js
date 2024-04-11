@@ -46,8 +46,6 @@ db.connect()
 
 
 
-
-
 // Register `hbs` as our view engine using its bound `engine()` function.
 app.use(express.static(__dirname + '/src/'));
 app.engine('hbs', hbs.engine);
