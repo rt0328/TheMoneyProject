@@ -249,6 +249,7 @@ app.get('/portfolio', async (req, res) => {
 
     const stockData = await db.manyOrNone('SELECT * FROM portfolios_to_stocks pts JOIN stocks s ON pts.stock_id = s.stock_id JOIN portfolios p ON pts.portfolio_id = p.portfolio_id WHERE pts.portfolio_id = $1',[portfolioId]);
 
+    var currPortfolioValue = 0;
 
     // Calculate current value for each stock
     for (const stock of stockData) {
@@ -256,20 +257,15 @@ app.get('/portfolio', async (req, res) => {
       console.log(stock.stock_symbol);
       const currentPrice = await getSymbolPrice(stock.stock_symbol);
       console.log(currentPrice);
+
+      const currStockValue = currentPrice * stock.num_shares;
+
+      currPortfolioValue += currStockValue;
       
       // Calculate current value for the stock
-      stock.current_value = currentPrice * stock.num_shares;
+      stock.current_value = formatDollarAmount(currStockValue);
     }
-
-    console.log(stockData);
-
-    // Calculate total portfolio value
-    let currPortfolioValue = 0;
-    for (const stock of stockData) {
-      currPortfolioValue += stock.current_value;
-    }
-
-    const currentLiquidity = portfolioData.current_liquidity;
+    const currentLiquidity = formatDollarAmount(portfolioData.current_liquidity);
 
     // Pass information into the portfolio page
     res.render('pages/portfolio', { 
