@@ -104,7 +104,7 @@ function openActionModal(typeId, rowId) {
       `;
     } else if (typeId === 3) {
       // Search stock action
-      document.getElementById('modal-title').innerText = 'Search Stock';
+      document.getElementById('modal-title').innerText = 'Purchase New Stock';
 
       // Add form inputs for searching stock
       form.innerHTML = `
