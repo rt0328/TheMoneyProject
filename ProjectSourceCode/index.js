@@ -26,6 +26,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
 const bcrypt = require('bcrypt'); //  To hash passwords
 const { error} = require('console');
+const url = require('url');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -284,6 +285,7 @@ app.get('/portfolio', async (req, res) => {
     const user = req.session.user;
     const portfolioId = req.query.portfolioId || req.session.portfolioId;
 
+
     // Get user data from users table based on session 
     const userData = await db.one('SELECT * FROM users WHERE username = $1', [user.username]);
 
@@ -329,6 +331,152 @@ app.get('/portfolio', async (req, res) => {
 });
 
 
+// Purchase stock route
+app.post('/buyStock', async (req, res) => {
+  try {
+    console.log('Buy stock request received:', req.body);
+
+    const { portfolioId, stockSymbol, numStocks } = req.body;
+    const username = req.session.user.username;
+
+    console.log('User:', username);
+    console.log('Portfolio ID:', portfolioId);
+    console.log('Stock Symbol:', stockSymbol);
+    console.log('Number of Stocks:', numStocks);
+
+    // Check if the portfolio belongs to the current user
+    const portfolioOwner = await db.oneOrNone('SELECT user_id FROM portfolios WHERE portfolio_id = $1', [portfolioId]);
+    if (!portfolioOwner || portfolioOwner.user_id !== username) {
+      console.log('Unauthorized access to portfolio');
+      return res.status(403).json({ message: "Unauthorized access to portfolio" });
+    }
+
+    // Fetch user's current liquidity from portfolios table
+    const { current_liquidity } = await db.one('SELECT current_liquidity FROM portfolios WHERE portfolio_id = $1', [portfolioId]);
+
+    console.log('Current Liquidity:', current_liquidity);
+
+    // Call Finnhub API to get current price of the stock
+    console.log('Fetching quote for symbol:', stockSymbol);
+    const currentPrice = await getSymbolPrice(stockSymbol);
+
+    console.log('Current Price for', stockSymbol, 'is', currentPrice);
+
+    // Calculate the cost of purchasing the specified number of shares
+    const purchaseCost = currentPrice * numStocks;
+
+    console.log('Purchase Cost:', purchaseCost);
+
+    // Check if user has enough liquidity for the purchase
+    if (purchaseCost > current_liquidity) {
+      console.log('Insufficient funds for the purchase');
+      return res.status(400).json({ message: "Insufficient funds for the purchase" });
+    }
+
+    // Deduct the purchase cost from user's current liquidity
+    const newLiquidity = current_liquidity - purchaseCost;
+
+    console.log('New Liquidity after purchase:', newLiquidity);
+
+    // Update user's current liquidity in the portfolios table
+    await db.none('UPDATE portfolios SET current_liquidity = $1 WHERE portfolio_id = $2', [newLiquidity, portfolioId]);
+
+    // Get the stock_id from the stocks table based on the stock_symbol
+    const stockInfo = await db.one('SELECT stock_id FROM stocks WHERE stock_symbol = $1', [stockSymbol]);
+
+    // Check if the user already owns shares of the purchased stock in this portfolio
+    const existingStock = await db.oneOrNone('SELECT * FROM portfolios_to_stocks WHERE portfolio_id = $1 AND stock_id = $2', [portfolioId, stockInfo.stock_id]);
+
+    if (existingStock) {
+      // If the user already owns shares of the purchased stock, update the number of shares
+      await db.none('UPDATE portfolios_to_stocks SET num_shares = num_shares + $1 WHERE portfolio_id = $2 AND stock_id = $3', [numStocks, portfolioId, stockInfo.stock_id]);
+    } else {
+      // If the user doesn't own shares of the purchased stock, insert a new row
+      await db.none('INSERT INTO portfolios_to_stocks (portfolio_id, stock_id, num_shares) VALUES ($1, $2, $3)', [portfolioId, stockInfo.stock_id, numStocks]);
+    }
+
+    // Respond with status 200 for success
+    res.status(200).json({ message: "Stock sold successfully" });
+
+  } catch (error) {
+    console.error('Error purchasing stock:', error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
+
+
+// Sell stock route
+app.post('/sellStock', async (req, res) => {
+  try {
+    console.log('Sell stock request received:', req.body);
+
+    const { portfolioId, stockSymbol, numStocks } = req.body;
+    const username = req.session.user.username;
+
+    console.log('User:', username);
+    console.log('Portfolio ID:', portfolioId);
+    console.log('Stock Symbol:', stockSymbol);
+    console.log('Number of Stocks:', numStocks);
+
+    // Check if the portfolio belongs to the current user
+    const portfolioOwner = await db.oneOrNone('SELECT user_id FROM portfolios WHERE portfolio_id = $1', [portfolioId]);
+    if (!portfolioOwner || portfolioOwner.user_id !== username) {
+      console.log('Unauthorized access to portfolio');
+      return res.status(403).json({ message: "Unauthorized access to portfolio" });
+    }
+
+    // Fetch user's current liquidity from portfolios table
+    const { current_liquidity } = await db.one('SELECT current_liquidity FROM portfolios WHERE portfolio_id = $1', [portfolioId]);
+
+    // Call Finnhub API to get current price of the stock
+    console.log('Fetching quote for symbol:', stockSymbol);
+    const currentPrice = await getSymbolPrice(stockSymbol);
+
+    console.log('Current Price for', stockSymbol, 'is', currentPrice);
+
+    // Calculate the value of the sold stocks
+    const saleValue = currentPrice * numStocks;
+
+    console.log('Sale Value:', saleValue);
+
+    // Add the sale value to user's current liquidity
+    const newLiquidity = current_liquidity + saleValue;
+
+    console.log('New Liquidity after sale:', newLiquidity);
+
+    // Update user's current liquidity in the portfolios table
+    await db.none('UPDATE portfolios SET current_liquidity = $1 WHERE portfolio_id = $2', [newLiquidity, portfolioId]);
+
+    // Get the stock_id from the stocks table based on the stock_symbol
+    const stockInfo = await db.one('SELECT stock_id FROM stocks WHERE stock_symbol = $1', [stockSymbol]);
+
+    // Check if the user already owns shares of the sold stock in this portfolio
+    const existingStock = await db.oneOrNone('SELECT * FROM portfolios_to_stocks WHERE portfolio_id = $1 AND stock_id = $2', [portfolioId, stockInfo.stock_id]);
+    if (!existingStock || existingStock.num_shares < numStocks) {
+      console.log('Insufficient stocks for sale');
+      return res.status(400).json({ message: "Insufficient stocks for sale" });
+    }
+
+    // Update the number of shares in the portfolios_to_stocks table
+    await db.none('UPDATE portfolios_to_stocks SET num_shares = num_shares - $1 WHERE portfolio_id = $2 AND stock_id = $3', [numStocks, portfolioId, stockInfo.stock_id]);
+
+    console.log('Stock sold successfully');
+
+    // Respond with status 200 for success
+    res.status(200).json({ message: "Stock sold successfully" });
+    
+
+  } catch (error) {
+    console.error('Error selling stock:', error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
+
+
 // -------------------------------------  API   ----------------------------------------------
 
 require('dotenv').config();
@@ -338,40 +486,38 @@ require('dotenv').config();
 const finnhub = require('finnhub');
 
 
-// Function to get the price of a stock symbol
 async function getSymbolPrice(symbol){
-   try {
-       // Retrieve the API key authentication object from the Finnhub API client
-       const api_key = finnhub.ApiClient.instance.authentications['api_key'];
+  try {
+      // Retrieve the API key authentication object from the Finnhub API client
+      const api_key = finnhub.ApiClient.instance.authentications['api_key'];
 
-       // Set the API key from the environment variable
-       api_key.apiKey = process.env.API_KEY;
+      // Set the API key from the environment variable
+      api_key.apiKey = process.env.API_KEY;
 
-       // Create a new instance of the Finnhub client
-       const finnhubClient = new finnhub.DefaultApi();
+      // Create a new instance of the Finnhub client
+      const finnhubClient = new finnhub.DefaultApi();
 
+      // Fetch the quote for the given symbol and handle the response
+      const data = await new Promise((resolve, reject) => {
+          finnhubClient.quote(symbol, (error, data, response) => {
+              if (error) {
+                  console.error('Error fetching quote:', error);
+                  reject(error);
+              } else {
+                  resolve(data);
+              }
+          });
+      });
 
-       // Fetch the quote for the given symbol and handle the response
-       const data = await new Promise((resolve, reject) => {
-           finnhubClient.quote(symbol, (error, data, response) => {
-               if (error) {
-                   reject(error);
-               } else {
-                   resolve(data);
-               }
-           });
-       });
-       const currentPrice = data.c;
-       //console.log('Current price:', currentPrice);
+      // You can return or use the current price as needed
+      return data.c;
+  } catch(error) {
+      // Log any errors that occur during the API call
+      console.error('Error fetching symbol price:', error);
+      throw error; // rethrow the error to propagate it to the caller
+  }
+}
 
-
-       // You can return or use the current price as needed
-       return currentPrice;
-   } catch(error) {
-       // Log any errors that occur during the API call
-       console.error('error', error);
-   }
-};
 
 
 

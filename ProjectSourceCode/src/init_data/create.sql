@@ -17,7 +17,6 @@ DROP TABLE IF EXISTS stocks;
 CREATE TABLE stocks (
     stock_id SERIAL PRIMARY KEY,
     stock_symbol VARCHAR(5) NOT NULL,
-    num_shares INT
 );
 
 DROP TABLE IF EXISTS groups;
@@ -45,7 +44,8 @@ CREATE TABLE groups_to_portfolios (
 DROP TABLE IF EXISTS portfolios_to_stocks;
 CREATE TABLE portfolios_to_stocks(
     portfolio_id INT NOT NULL,
-    stock_id INT NOT NULL
+    stock_id INT NOT NULL,
+    num_shares INT NOT NULL
 );
 
 
