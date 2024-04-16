@@ -25,7 +25,7 @@ const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
 const bcrypt = require('bcrypt'); //  To hash passwords
-const { error } = require('console');
+const { error} = require('console');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -239,12 +239,12 @@ app.get('/logout', (req, res) => {
 
 
 app.get('/groups', async (req,res) => {
-  res.render('pages/groups')
+  res.render('pages/groups', {loggedIn: true})
 });
 
 app.get('/group', async (req,res) => {
   const groupId = req.query.groupId || req.session.groupId;
-  res.render('pages/group', {groupId : groupId})
+  res.render('pages/group', {groupId : groupId, loggedIn: true})
 });
 
 
