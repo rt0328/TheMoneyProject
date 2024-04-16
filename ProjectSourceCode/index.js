@@ -1,3 +1,21 @@
+const THEME_COLORS = [
+  {
+    "color" : "green",
+    "hex" : "7ADD83"
+  },
+  {
+    "color" : "pink",
+    "hex" : "F18AED"
+  },
+  {
+    "color" : "turquoise",
+    "hex" : "7ACBDD"
+  },
+  {
+    "color" : "red",
+    "hex" : "ED6262"
+  },
+]
 // ----------------------------------   DEPENDENCIES  ----------------------------------------------
 const express = require('express');
 const app = express();
@@ -340,4 +358,8 @@ function formatDollarAmount(amount) {
   // Return formatted amount
   return wholePart + '.' + decimalPart;
 }
+
+
+
+
 
