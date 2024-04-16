@@ -1,3 +1,27 @@
+const LOOKUP_STOCKS = [
+    {
+        "symbol" : "GOOGL",
+        "currValue" : 2800.75,
+    },
+    {
+        "symbol" : "APPL",
+        "currValue" : 150.25,
+    },
+    {
+        "symbol" : "AMZN",
+        "currValue" : 3200.50
+    },
+    {
+        "symbol" : "MSFT",
+        "currValue" : 280.90
+    }
+];
+
+
+
+
+
+
 let ACTION_MODAL;
 
 // Function to initialize the action modal
@@ -149,84 +173,99 @@ function getCurrentMarketValue(stockSymbol) {
 
 // Function to handle search stock form submission
 function searchStock(event) {
-  event.preventDefault();
+    event.preventDefault();
+    
+    // Get the search input value
+    const stockSymbol = document.getElementById('stock-symbol-search').value;
   
-  // Get the search input value
-  const stockSymbol = document.getElementById('stock-symbol-search').value;
-
-  // Call the API to search for stocks by symbol
-  fetch(`/searchBySymbol?symbol=${stockSymbol}`)
-      .then(response => response.json())
-      .then(data => {
-          // Display the search results
-          displaySearchResults(data);
-      })
-      .catch(error => {
-          console.error('Error searching for stocks:', error);
-          // Display an error message to the user
-          alert('An error occurred while searching for stocks. Please try again.');
-      });
-}
-
+    // Call the API to search for stocks by symbol
+    const results = LOOKUP_STOCKS.filter(stock => stock.symbol.includes(stockSymbol.toUpperCase()));
+    
+    // Display the search results
+    displaySearchResults(results);
+  }
+  
 // Function to display search results
 function displaySearchResults(results) {
-  const searchResultsContainer = document.getElementById('search-results');
-  searchResultsContainer.innerHTML = ''; // Clear previous results
+    const searchResultsContainer = document.getElementById('search-results');
+    searchResultsContainer.innerHTML = ''; // Clear previous results
+    
   
-  // Loop through the results and display each stock
-  results.forEach(stock => {
-      // Create a button for each stock
-      const stockButton = document.createElement('button');
-      stockButton.textContent = `${stock.symbol} - ${stock.name}`;
-      stockButton.classList.add('btn', 'btn-primary', 'mb-2');
-      stockButton.addEventListener('click', () => {
-          // When a stock button is clicked, show its current market value
-          showMarketValue(stock.symbol);
+    // Check if there are any results
+    if (results.length === 0) {
+      // If there are no results, display a message
+      const noResultsMessage = document.createElement('p');
+      noResultsMessage.textContent = "No results found.";
+      searchResultsContainer.appendChild(noResultsMessage);
+    } else {
+        // Create a header for the results
+        const resultsHeader = document.createElement('h5');
+        resultsHeader.textContent = "Results";
+        searchResultsContainer.appendChild(resultsHeader);
+      // Loop through the results and display each stock
+      results.forEach(stock => {
+          // Create a div for each stock
+          const stockDiv = document.createElement('div');
+          stockDiv.classList.add('mb-2');
+          
+          // Create a hyperlink for the stock symbol
+          const stockLink = document.createElement('a');
+          stockLink.textContent = `${stock.symbol}`;
+          stockLink.href = "#"; // You can set the href to any appropriate value or leave it empty
+          
+          // Create a span for the current value
+          const valueSpan = document.createElement('span');
+          valueSpan.textContent = ` - $${stock.currValue.toFixed(2)}`;
+          
+          // Append hyperlink and value span to the stock div
+          stockDiv.appendChild(stockLink);
+          stockDiv.appendChild(valueSpan);
+          
+          // Add event listener to the hyperlink to show quantity input
+          stockLink.addEventListener('click', () => {
+              showQuantityInput(stock.symbol);
+          });
+          
+          // Append stock div to the search results container
+          searchResultsContainer.appendChild(stockDiv);
       });
-      searchResultsContainer.appendChild(stockButton);
-  });
+    }
+  }
+  
+  
+  
+
+// Function to show input field for quantity
+function showQuantityInput(symbol) {
+    // Get the current liquidity
+    const currentLiquidity = document.getElementById('currentLiquidity').innerText;
+
+    // Find the stock information in the LOOKUP_STOCKS array
+    const stock = LOOKUP_STOCKS.find(item => item.symbol === symbol);
+
+    // Display the current liquidity and market value in the modal
+    const additionalInfo = document.getElementById('additional-info');
+    additionalInfo.innerHTML = `
+        <div class="row">
+            <div class="col">
+                <strong>Stock Symbol:</strong> ${symbol}
+            </div>
+            <div class="col">
+                <strong>Current Liquidity:</strong> ${currentLiquidity}
+            </div>
+            <div class="col">
+                <strong>Current Market Value:</strong> $${stock.currValue.toFixed(2)}
+            </div>
+        </div>
+    `;
+
+    // Add form inputs for buying stock
+    const form = document.getElementById('action-form');
+    form.innerHTML = `
+        <div class="mb-3">
+            <label for="num-shares-buy" class="form-label">Number of Shares to Buy:</label>
+            <input type="number" class="form-control" id="num-shares-buy" name="num-shares-buy" required>
+        </div>
+        <input type="hidden" id="stock-symbol" name="symbol" value="${symbol}">
+    `;
 }
-
-// Function to fetch and display the current market value of a stock
-function showMarketValue(symbol) {
-  // Call an API to get the current market value of the stock
-  fetch(`/getCurrentMarketValue?symbol=${symbol}`)
-      .then(response => response.json())
-      .then(data => {
-          // Display the current market value in the modal
-          const additionalInfo = document.getElementById('additional-info');
-          additionalInfo.innerHTML = `
-              <div class="row">
-                  <div class="col">
-                      <strong>Stock Symbol:</strong> ${symbol}
-                  </div>
-                  <div class="col">
-                      <strong>Current Market Value:</strong> $${data.marketValue}
-                  </div>
-              </div>
-          `;
-
-          // Add form inputs for buying stock
-          const form = document.getElementById('action-form');
-          form.innerHTML = `
-              <div class="mb-3">
-                  <label for="num-shares-buy" class="form-label">Number of Shares to Buy:</label>
-                  <input type="number" class="form-control" id="num-shares-buy" name="num-shares-buy" required>
-              </div>
-              <input type="hidden" id="stock-symbol" name="symbol" value="${symbol}">
-          `;
-      })
-      .catch(error => {
-          console.error('Error fetching market value:', error);
-          // Display an error message to the user
-          alert('An error occurred while fetching the market value. Please try again.');
-      });
-}
-
-
-
-
-
-
-
-

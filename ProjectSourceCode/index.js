@@ -327,17 +327,17 @@ async function getSymbolPrice(symbol){
 
 
 
-// Formats integer into USD format - e.g. 1122230.23 => 1,122,230.23
 function formatDollarAmount(amount) {
+  // Round the amount to two decimal places
+  amount = Number(amount).toFixed(2);
+
   // Convert amount to string and split it into whole and decimal parts
   let [wholePart, decimalPart] = String(amount).split('.');
 
   // Add commas every three digits from the right in the whole part
   wholePart = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-  // If decimalPart exists, concatenate with '.'; otherwise, set it as '00'
-  decimalPart = decimalPart ? '.' + decimalPart : '.00';
-
   // Return formatted amount
-  return wholePart + decimalPart;
+  return wholePart + '.' + decimalPart;
 }
+
