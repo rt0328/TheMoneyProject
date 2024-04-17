@@ -242,6 +242,36 @@ app.get('/groups', async (req,res) => {
   res.render('pages/groups', {loggedIn: true})
 });
 
+app.get('/create_group', async (req,res) => {
+  res.render('pages/create_group', {loggedIn: true})
+});
+
+app.post('/create_group', async (req, res) => {
+  if (req.body.groupname === '' || req.body.startingliquidity === '') {
+    res.status(400).render('pages/register', {message: "Please enter a group name and starting liquidity", error: 1});
+
+  }
+  else {
+    const insertGroup = async (groupname, startingliquidity) => {
+      try {
+        await db.none('INSERT INTO groups(admin_user, group_name, starting_liquidity) VALUES ($1, $2, $3)', [req.session.user.username, groupname, startingliquidity]);
+        return true;
+      } catch (error) {
+        console.error('Error inserting group:', error);
+        return false;
+      }
+    };
+
+    const success = await insertGroup(req.body.groupname, req.body.startingliquidity);
+
+    if (success) {
+      res.status(302).render('pages/groups',{message: "Group Added Successfully"});
+    } else {
+      res.status(400).render('pages/create_group',{message: "Group already exists. Please try a new group name.", error: 1});
+    }
+  }
+});
+
 app.get('/group', async (req,res) => {
   const groupId = req.query.groupId || req.session.groupId;
   res.render('pages/group', {groupId : groupId, loggedIn: true})
