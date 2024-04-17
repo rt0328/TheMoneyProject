@@ -248,6 +248,69 @@ app.get('/group', async (req,res) => {
 });
 
 
+app.post('/join', async (req, res) => {
+  const { group_code } = req.body;
+
+  const groupUser = async (group_code) => {
+    try {
+      const group = await db.oneOrNone('SELECT * FROM groups WHERE group_code = $1', [group_code]);
+      if (groupUser) {
+        return { status: 'success', user };
+      } else {
+          // code doesn't exist
+          return { status: 'codeIncorrect' };
+        }
+      
+    } catch (error) {
+      console.error('Error joining group:', error);
+      return { status: 'error', error };
+    }
+  };
+
+  const result = await groupUser(group_code);
+
+  if (result.status === 'success') {
+    // If the user is found and password matches, redirect to /portfolio route after setting the session.
+    req.session.groupUser = result.groupUser;
+    console.log('Success!')
+    req.session.save(() => {
+      res.redirect('/groups');
+    });
+  } else if (result.status === 'codeIncorrect') {
+    // If the group code doesn't exist, render the groups page with an error message
+    res.status(400).render('pages/groups', { message: 'Incorrect group code.', error: 1 });
+  } else {
+    // For any other errors, render the login page with a generic error message.
+    res.status(404).render('pages/login', { message: 'An error occurred. Please try again later.' });
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 app.get('/portfolio', async (req, res) => {
   try {
     // Get user's current liquidity (money in users table)

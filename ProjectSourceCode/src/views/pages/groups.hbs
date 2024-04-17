@@ -36,7 +36,33 @@
 
 <button type="button" class="btn btn-primary rounded-pill">+ Create Group</button>
 
-<button type="button" class="btn btn-primary rounded-pill">+ Join Group</button>
+<button type="button" class="btn btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#staticBackdrop">+ Join Group</button>
+
+<!-- Modal -->
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">Join Group</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" action="/join" method="POST">
+        <form>
+          <div class="mb-3">
+            <label for="group-code" class="col-form-label">Enter Group Code </label>
+            <input type="text" class="form-control" name="group_code" id="group_code">
+          </div>
+        </form>
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary"> Join </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 </div>
 
