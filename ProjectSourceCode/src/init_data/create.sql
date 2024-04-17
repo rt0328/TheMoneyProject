@@ -23,6 +23,7 @@ CREATE TABLE stocks (
 DROP TABLE IF EXISTS groups;
 CREATE TABLE groups (
     group_id SERIAL PRIMARY KEY,
+    group_name VARCHAR(50) NOT NULL,
     admin_user VARCHAR(50) NOT NULL,
     starting_liquidity INT NOT NULL,
     icon_num INT,
