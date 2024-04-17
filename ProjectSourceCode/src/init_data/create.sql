@@ -25,7 +25,8 @@ CREATE TABLE groups (
     group_id SERIAL PRIMARY KEY,
     admin_user VARCHAR(50) NOT NULL,
     starting_liquidity INT NOT NULL,
-    icon_num INT
+    icon_num INT,
+    group_code INT
 );
 
 DROP TABLE IF EXISTS users_to_groups;
