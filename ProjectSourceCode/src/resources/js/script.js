@@ -26,12 +26,14 @@ let ACTION_MODAL;
 
 // Function to initialize the action modal
 function initializeActionModal() {
+    console.log('Action Modal Initialized!')
     ACTION_MODAL = new bootstrap.Modal(document.getElementById('action-modal'));
 }
 
 // Function to open the action modal
-function openActionModal(typeId, rowId) {
+function openActionModal(typeId, stockSymbol) {
     console.log('Open Action Modal');
+    console.log(stockSymbol)
   
     // Get the form element and additional info container
     const form = document.getElementById('action-form');
@@ -46,10 +48,14 @@ function openActionModal(typeId, rowId) {
     document.getElementById('submit_button').removeEventListener('click', handleSellStockFormSubmission);
   
     // Get the row corresponding to the button clicked
-    const row = document.getElementById(`row-${rowId}`);
+    const row = document.getElementById(`row-${stockSymbol}`);
+
+    console.log(row)
   
     // Determine action based on typeId
     if (typeId === 1) {
+
+        console.log('Attempting buy modal')
         // Buy stock action
         document.getElementById('modal-title').innerText = 'Buy Stock';
   
@@ -144,39 +150,8 @@ function closeActionModal() {
     window.location.reload();
 }
 
-// Function to handle search stock form submission
-function searchStock(event) {
-    event.preventDefault();
-    
-    // Get the search input value
-    const stockSymbol = document.getElementById('stock-symbol-search').value;
 
-    // Call an API to get the current market value of the stock
-    // Replace the API call with your own implementation
-    const currentMarketValue = getCurrentMarketValue(stockSymbol);
 
-    // Display the current market value in the modal
-    const additionalInfo = document.getElementById('additional-info');
-    additionalInfo.innerHTML = `
-        <div class="row">
-            <div class="col">
-                <strong>Current Market Value:</strong> $${currentMarketValue}
-            </div>
-        </div>
-    `;
-
-    // Add form inputs for buying stock
-    const form = document.getElementById('action-form');
-    form.innerHTML = `
-        <div class="mb-3">
-            <label for="num-shares-buy" class="form-label">Number of Shares to Buy:</label>
-            <input type="number" class="form-control" id="num-shares-buy" name="num-shares-buy" required>
-        </div>
-    `;
-
-    // Add event listener to the submit button for buying stock
-    document.getElementById('submit_button').addEventListener('click', handleBuyStockFormSubmission);
-}
 
 // Dummy function to simulate getting current market value from an API
 function getCurrentMarketValue(stockSymbol) {
@@ -285,12 +260,20 @@ function showQuantityInput(symbol) {
         <input type="hidden" id="stock-symbol" name="symbol" value="${symbol}">
 
     `;
+
+    // Add event listener to the submit button for buying stock
+    document.getElementById('submit_button').addEventListener('click', e => {
+        handleBuyStockFormSubmission(e);
+    });
+
+
 }
 
 
 function handleBuyStockFormSubmission(event) {
     event.preventDefault();
 
+    console.log('Called handle buy stock!')
     // Extract portfolioId from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const portfolioId = parseInt(urlParams.get('portfolioId'), 10);
@@ -299,7 +282,7 @@ function handleBuyStockFormSubmission(event) {
     const formData = new FormData(document.getElementById('action-form'));
 
     // Get numStocks and stockSymbol from the form data
-    const numStocks = parseInt(formData.get('num-shares-buy'), 10);
+    const numStocks = parseFloat(formData.get('num-shares-buy'), 10);
     const stockSymbol = formData.get('symbol'); // Correct ID used here
 
     // Construct the JSON data object
@@ -350,7 +333,7 @@ function handleSellStockFormSubmission(event) {
     const formData = new FormData(document.getElementById('action-form'));
 
     // Get numStocks and stockSymbol from the form data
-    const numStocks = parseInt(formData.get('num-shares-sell'), 10);
+    const numStocks = parseFloat(formData.get('num-shares-sell'), 10);
     const stockSymbol = formData.get('symbol'); // Correct ID used here
 
     // Construct the JSON data object

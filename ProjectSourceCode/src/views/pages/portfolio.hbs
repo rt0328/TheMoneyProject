@@ -29,15 +29,15 @@
             </thead>
             <tbody id="assetTableBody">
                 {{#each userStocks}}
-                <tr id="row-{{stock_id}}">
+                <tr id="row-{{stock_symbol}}">
                     <th scope="row">{{@index}}</th>
                     <td class="stock-symbol">{{stock_symbol}}</td>
                     <td>{{num_shares}}</td>
                     <td>${{current_value}}</td>
                     <td>-</td>
                     <td>
-                        <button type="button" class="btn btn-secondary" onclick="openActionModal(1,{{stock_id}})">Buy</button>
-                        <button type="button" class="btn btn-secondary" onclick="openActionModal(2,{{stock_id}})">Sell</button>
+                        <button type="button" class="btn btn-secondary" onclick="openActionModal(1, '{{stock_symbol}}')">Buy</button>
+                        <button type="button" class="btn btn-secondary" onclick="openActionModal(2, '{{stock_symbol}}')">Sell</button>
                     </td>
                 </tr>
                 {{/each}}
@@ -53,7 +53,7 @@
         </table>
 
         <!-- Button for 'Purchase Stock' modal -->
-        <button type="button" class="btn btn-secondary" onclick="openActionModal(3)">+ Purchase New Stock</button>
+        <button type="button" class="btn btn-secondary" onclick="openActionModal(3, '')">+ Purchase New Stock</button>
 
     </div>
 </body>

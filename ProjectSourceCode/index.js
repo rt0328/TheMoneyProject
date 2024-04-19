@@ -294,7 +294,8 @@ app.get('/groups', async (req, res) => {
       FROM groups g
       INNER JOIN users_to_groups ug ON g.group_id = ug.group_id
       INNER JOIN groups_to_portfolios gp ON g.group_id = gp.group_id
-      WHERE ug.user_id = $1
+      INNER JOIN portfolios p ON gp.portfolio_id = p.portfolio_id
+      WHERE ug.user_id = $1 AND p.user_id = $1
     `, [user.username]);
 
     // Append iconFileName and color to each group in groupData
@@ -314,6 +315,7 @@ app.get('/groups', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
 
 
 
@@ -454,7 +456,6 @@ app.get('/portfolio', async (req, res) => {
     const user = req.session.user;
     const portfolioId = req.query.portfolioId || req.session.portfolioId;
 
-
     // Get user data from users table based on session 
     const userData = await db.one('SELECT * FROM users WHERE username = $1', [user.username]);
 
@@ -462,13 +463,14 @@ app.get('/portfolio', async (req, res) => {
     const portfolioData = await db.one('SELECT * FROM portfolios WHERE portfolio_id = $1', [portfolioId]);
 
     // Determine if user matches the owner of the portfolio
-    if(portfolioData.user_id !== userData.username) {
-      // THROW AN ERROR RELATED TO AUTH
+    if (portfolioData.user_id !== userData.username) {
+      return res.status(404).json({ message: "Unauthorized access." });
     }
 
-    const stockData = await db.manyOrNone('SELECT * FROM portfolios_to_stocks pts JOIN stocks s ON pts.stock_id = s.stock_id JOIN portfolios p ON pts.portfolio_id = p.portfolio_id WHERE pts.portfolio_id = $1',[portfolioId]);
+    // Fetch stock data from portfolios_to_stocks table for the specified portfolio
+    const stockData = await db.manyOrNone('SELECT * FROM portfolios_to_stocks WHERE portfolio_id = $1', [portfolioId]);
 
-    var currPortfolioValue = 0;
+    let currPortfolioValue = 0;
 
     // Calculate current value for each stock
     for (const stock of stockData) {
@@ -480,10 +482,12 @@ app.get('/portfolio', async (req, res) => {
       const currStockValue = currentPrice * stock.num_shares;
 
       currPortfolioValue += currStockValue;
-      
-      // Calculate current value for the stock
+
+      // Update current value for the stock in the stockData array
       stock.current_value = formatDollarAmount(currStockValue);
     }
+
+    // Format current liquidity
     const currentLiquidity = formatDollarAmount(portfolioData.current_liquidity);
 
     // Pass information into the portfolio page
@@ -500,7 +504,6 @@ app.get('/portfolio', async (req, res) => {
 });
 
 
-// Purchase stock route
 app.post('/buyStock', async (req, res) => {
   try {
     console.log('Buy stock request received:', req.body);
@@ -550,22 +553,19 @@ app.post('/buyStock', async (req, res) => {
     // Update user's current liquidity in the portfolios table
     await db.none('UPDATE portfolios SET current_liquidity = $1 WHERE portfolio_id = $2', [newLiquidity, portfolioId]);
 
-    // Get the stock_id from the stocks table based on the stock_symbol
-    const stockInfo = await db.one('SELECT stock_id FROM stocks WHERE stock_symbol = $1', [stockSymbol]);
-
-    // Check if the user already owns shares of the purchased stock in this portfolio
-    const existingStock = await db.oneOrNone('SELECT * FROM portfolios_to_stocks WHERE portfolio_id = $1 AND stock_id = $2', [portfolioId, stockInfo.stock_id]);
+    // Check if the stock is already present in the portfolio
+    const existingStock = await db.oneOrNone('SELECT * FROM portfolios_to_stocks WHERE portfolio_id = $1 AND stock_symbol = $2', [portfolioId, stockSymbol]);
 
     if (existingStock) {
-      // If the user already owns shares of the purchased stock, update the number of shares
-      await db.none('UPDATE portfolios_to_stocks SET num_shares = num_shares + $1 WHERE portfolio_id = $2 AND stock_id = $3', [numStocks, portfolioId, stockInfo.stock_id]);
+      // If the stock is already present, update the number of shares by adding the purchased quantity
+      await db.none('UPDATE portfolios_to_stocks SET num_shares = num_shares + $1 WHERE portfolio_id = $2 AND stock_symbol = $3', [numStocks, portfolioId, stockSymbol]);
     } else {
-      // If the user doesn't own shares of the purchased stock, insert a new row
-      await db.none('INSERT INTO portfolios_to_stocks (portfolio_id, stock_id, num_shares) VALUES ($1, $2, $3)', [portfolioId, stockInfo.stock_id, numStocks]);
+      // If the stock is not present, insert a new row into the portfolios_to_stocks table
+      await db.none('INSERT INTO portfolios_to_stocks (portfolio_id, stock_symbol, num_shares) VALUES ($1, $2, $3)', [portfolioId, stockSymbol, numStocks]);
     }
 
     // Respond with status 200 for success
-    res.status(200).json({ message: "Stock sold successfully" });
+    res.status(200).json({ message: "Stock purchased successfully" });
 
   } catch (error) {
     console.error('Error purchasing stock:', error);
@@ -576,7 +576,7 @@ app.post('/buyStock', async (req, res) => {
 
 
 
-// Sell stock route
+
 app.post('/sellStock', async (req, res) => {
   try {
     console.log('Sell stock request received:', req.body);
@@ -599,6 +599,14 @@ app.post('/sellStock', async (req, res) => {
     // Fetch user's current liquidity from portfolios table
     const { current_liquidity } = await db.one('SELECT current_liquidity FROM portfolios WHERE portfolio_id = $1', [portfolioId]);
 
+    // Fetch the number of shares the user currently has for the stock being sold
+    const existingStock = await db.oneOrNone('SELECT num_shares FROM portfolios_to_stocks WHERE portfolio_id = $1 AND stock_symbol = $2', [portfolioId, stockSymbol]);
+
+    if (!existingStock || existingStock.num_shares < numStocks) {
+      console.log('Insufficient stocks for sale');
+      return res.status(400).json({ message: "Insufficient stocks for sale" });
+    }
+
     // Call Finnhub API to get current price of the stock
     console.log('Fetching quote for symbol:', stockSymbol);
     const currentPrice = await getSymbolPrice(stockSymbol);
@@ -618,30 +626,27 @@ app.post('/sellStock', async (req, res) => {
     // Update user's current liquidity in the portfolios table
     await db.none('UPDATE portfolios SET current_liquidity = $1 WHERE portfolio_id = $2', [newLiquidity, portfolioId]);
 
-    // Get the stock_id from the stocks table based on the stock_symbol
-    const stockInfo = await db.one('SELECT stock_id FROM stocks WHERE stock_symbol = $1', [stockSymbol]);
-
-    // Check if the user already owns shares of the sold stock in this portfolio
-    const existingStock = await db.oneOrNone('SELECT * FROM portfolios_to_stocks WHERE portfolio_id = $1 AND stock_id = $2', [portfolioId, stockInfo.stock_id]);
-    if (!existingStock || existingStock.num_shares < numStocks) {
-      console.log('Insufficient stocks for sale');
-      return res.status(400).json({ message: "Insufficient stocks for sale" });
-    }
-
     // Update the number of shares in the portfolios_to_stocks table
-    await db.none('UPDATE portfolios_to_stocks SET num_shares = num_shares - $1 WHERE portfolio_id = $2 AND stock_id = $3', [numStocks, portfolioId, stockInfo.stock_id]);
+    const updatedShares = existingStock.num_shares - numStocks;
+    if (updatedShares === 0) {
+      // If all shares are sold, remove the record from portfolios_to_stocks
+      await db.none('DELETE FROM portfolios_to_stocks WHERE portfolio_id = $1 AND stock_symbol = $2', [portfolioId, stockSymbol]);
+    } else {
+      // Otherwise, update the number of shares
+      await db.none('UPDATE portfolios_to_stocks SET num_shares = $1 WHERE portfolio_id = $2 AND stock_symbol = $3', [updatedShares, portfolioId, stockSymbol]);
+    }
 
     console.log('Stock sold successfully');
 
     // Respond with status 200 for success
     res.status(200).json({ message: "Stock sold successfully" });
-    
 
   } catch (error) {
     console.error('Error selling stock:', error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
+
 
 
 

@@ -44,8 +44,8 @@ CREATE TABLE groups_to_portfolios (
 DROP TABLE IF EXISTS portfolios_to_stocks;
 CREATE TABLE portfolios_to_stocks(
     portfolio_id INT NOT NULL,
-    stock_id INT NOT NULL,
-    num_shares INT NOT NULL
+    stock_symbol VARCHAR(5) NOT NULL,
+    num_shares FLOAT NOT NULL
 );
 
 
