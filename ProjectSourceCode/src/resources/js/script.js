@@ -387,3 +387,22 @@ function handleSellStockFormSubmission(event) {
         // You can display an error message to the user or perform other actions here
     });
 }
+
+
+function copyToClipboard() {
+    // Select the input element containing the group join code
+    const input = document.getElementById('groupJoinCode');
+  
+    // Select the text in the input element
+    input.select();
+  
+    // Copy the selected text to the clipboard
+    document.execCommand('copy');
+  
+    // Deselect the text
+    input.setSelectionRange(0, 0);
+  
+    // Optionally, provide feedback to the user that the code has been copied
+    alert('Group join code copied to clipboard!');
+  }
+  

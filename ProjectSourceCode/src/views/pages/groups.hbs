@@ -1,46 +1,41 @@
 <body>
-<div class="container mt-3">
-<h1>My Groups</h1>
+  <div class="container my-5">
+    <h1>My Groups</h1>
 
+    {{#each groupData}}
+    <div class="card mb-3" style="background-color: #{{backgroundColor}} !important;">
+      <div class="card-header d-flex align-items-center">
+        <img width="75" src="/images/{{iconFileName}}" alt="{{group_name}} Icon">
+        <h3 class="m-2">{{group_name}}</h3>
+      </div>
+      <div class="card-body">
+        <h5 class="card-title">${{starting_liquidity}}</h5>
+        <!-- Replace balance here with the starting liquidity -->
+        <p class="card-text">Up/Down (amount)%</p>
+        <p class="card-text">{{group_code}}</p>
 
-<div class="card mb-3" style="background-color: #F18AED !important;">
- <div class="card-header">
-   (group name)
- </div>
- <div class="card-body">
-   <h5 class="card-title">$(balance here)</h5>
-   <p class="card-text">Up/Down (amount)%</p>
+        <a href="/group?groupId={{group_id}}" class="btn btn-light">View Group</a>
+        <a href="/portfolio?portfolioId={{portfolio_id}}" class="btn btn-light">View Portfolio</a>
+      </div>
+    </div>
+    {{/each}}
 
+    <div class="container mt-3">
+      <div class="row">
+          <div class="col">
+              <a href="/join_group" class="btn btn-primary rounded-pill me-1">Join Group</a>
+              <a href="/create_group" class="btn btn-primary rounded-pill">+ Create Group</a>
+          </div>
+      </div>
+    </div>
 
-   <a href="/group?groupId=1" class="btn btn-light">View Group</a>
-   <a href="/portfolio?portfolioId=1" class="btn btn-light">View Portfolio</a>
- </div>
-
-
-</div>
-
-<!--
-<div class="card bg-primary mb-3">
- <div class="card-header">
-   (group name)
- </div>
- <div class="card-body">
-   <h5 class="card-title">$(balance here)</h5>
-   <p class="card-text">Up/Down (amount)%</p>
-
-
-   <a href="#" class="btn btn-light">View</a>
-   <a href="#" class="btn btn-light">View</a>
- </div>
- -->
-
-<button type="button" class="btn btn-primary rounded-pill">+ Add Group</button>
-
-</div>
+    <div class="my-5"></div>
 
 
 
+    
 
 
-
+    
+  </div>
 </body>

@@ -1,0 +1,23 @@
+    {{>message}}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        Group Join Code
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Your group join code is:</p>
+                        <div class="input-group mb-3">
+                            <input type="text" id="groupJoinCode" class="form-control" value="{{ groupCode }}"
+                                readonly>
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button"
+                                    onclick="copyToClipboard()">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
