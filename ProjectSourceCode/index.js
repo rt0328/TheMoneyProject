@@ -603,8 +603,8 @@ app.post('/sellStock', async (req, res) => {
     const existingStock = await db.oneOrNone('SELECT num_shares FROM portfolios_to_stocks WHERE portfolio_id = $1 AND stock_symbol = $2', [portfolioId, stockSymbol]);
 
     if (!existingStock || existingStock.num_shares < numStocks) {
-      console.log('Insufficient stocks for sale');
-      return res.status(400).json({ message: "Insufficient stocks for sale" });
+      console.error('Error selling stock:', error);
+      return res.status(500).json({ message: "Insufficient funds." });
     }
 
     // Call Finnhub API to get current price of the stock
@@ -692,6 +692,22 @@ async function getSymbolPrice(symbol){
   }
 }
 
+
+app.get('/getSymbolPrice/:symbol', async (req, res) => {
+  try {
+      const symbol = req.params.symbol;
+
+      // Call the getSymbolPrice function to fetch the current price
+      const currentPrice = await getSymbolPrice(symbol);
+
+      // Send the current price as a JSON response
+      res.json({ symbol, currentPrice });
+  } catch (error) {
+      // Handle errors and send an appropriate response
+      console.error('Error fetching symbol price:', error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 
 
