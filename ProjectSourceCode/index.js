@@ -435,19 +435,51 @@ app.post('/join_group', async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-app.get('/group', async (req,res) => {
+app.get('/group', async (req, res) => {
   const groupId = req.query.groupId || req.session.groupId;
-  res.render('pages/group', {groupId : groupId, loggedIn: true})
+  const user = req.session.user;
+
+  console.log(groupId)
+
+  try {
+    
+    // Verify user belongs to the group
+    const userGroups = await db.manyOrNone('SELECT * FROM users_to_groups WHERE user_id = $1 AND group_id = $2', [user.username, groupId]);
+    if (!userGroups) {
+      return res.status(500).send('Error fetching user groups.');
+    }
+
+    console.log(userGroups);
+
+    if (userGroups.length === 0) {
+      return res.status(403).send('You do not have permission to access this group.');
+    }
+
+    // Get the group data
+    const groupData = await db.oneOrNone('SELECT * FROM groups WHERE group_id = $1', [groupId]);
+
+    // Get the portfolio id of the logged-in user in the specified group
+    const portfolioData = await db.oneOrNone('SELECT portfolio_id FROM groups_to_portfolios WHERE group_id = $1 AND portfolio_id IN (SELECT portfolio_id FROM portfolios WHERE user_id = $2)', [groupId, user.username]);
+    const portfolioId = portfolioData ? portfolioData.portfolio_id : null;
+
+    // Get list of other portfolios
+    const otherPortfoliosData = await db.manyOrNone('SELECT portfolio_id FROM groups_to_portfolios WHERE group_id = $1 AND portfolio_id != $2', [groupId, portfolioId]);
+    const otherPortfolioIds = otherPortfoliosData.map(row => row.portfolio_id);
+
+    console.log('group data, other portfolios:');
+    console.log(groupData);
+    console.log(otherPortfolioIds);
+
+    // Render the group page with data
+    res.render('pages/group', { groupData: groupData, loggedIn: true, otherPortfolios: otherPortfolioIds });
+  } catch (error) {
+    console.error('Error fetching group data:', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
+
+
+
 
 
 app.get('/portfolio', async (req, res) => {
@@ -734,15 +766,6 @@ function getIconFilename(iconNum) {
 
 
 
-// Function to generate a unique group code
-function generateGroupCode() {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-      code += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return code;
-}
 
 
 // Function to create a portfolio for the user

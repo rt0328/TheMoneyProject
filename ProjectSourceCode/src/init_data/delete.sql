@@ -4,9 +4,6 @@ DELETE FROM users;
 -- Delete all entries from the portfolios table
 DELETE FROM portfolios;
 
--- Delete all entries from the stocks table
-DELETE FROM stocks;
-
 -- Delete all entries from the groups table
 DELETE FROM groups;
 

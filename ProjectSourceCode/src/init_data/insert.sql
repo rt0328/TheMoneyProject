@@ -1,27 +1,32 @@
--- Insert a new group
-INSERT INTO groups (admin_user, group_name, starting_liquidity, icon_num, group_code)
-VALUES ('grace', 'examplegroup', 100000, 1, 'AD65TH');
+-- Insert users
+INSERT INTO users (username, password) VALUES
+('user1', 'password1'),
+('user2', 'password2');
 
--- Insert a new portfolio for the user
-INSERT INTO portfolios (user_id, current_liquidity)
-VALUES ('grace', 50000);
+-- Insert portfolios
+INSERT INTO portfolios (user_id, current_liquidity) VALUES
+('user1', 10000),
+('user2', 15000);
 
--- Insert two new stocks
-INSERT INTO stocks (stock_symbol)
-VALUES ('AAPL');
-INSERT INTO stocks (stock_symbol)
-VALUES ('TSLA');
+-- Insert groups
+INSERT INTO groups (group_name, admin_user, starting_liquidity, icon_num, group_code) VALUES
+('Group A', 'user1', 20000, 1, 'ABC123'),
+('Group B', 'user2', 25000, 2, 'XYZ456');
 
--- Link the user to the group
-INSERT INTO users_to_groups (user_id, group_id)
-VALUES ('grace', 1);
+-- Insert users_to_groups
+INSERT INTO users_to_groups (user_id, group_id) VALUES
+('user1', 1),
+('user2', 1),
+('user2', 2);
 
--- Link the group to the portfolio
-INSERT INTO groups_to_portfolios (group_id, portfolio_id)
-VALUES (1, 1);
+-- Insert groups_to_portfolios
+INSERT INTO groups_to_portfolios (group_id, portfolio_id) VALUES
+(1, 1),
+(2, 2);
 
--- Link the portfolio to the two stocks
-INSERT INTO portfolios_to_stocks (portfolio_id, stock_id, num_shares)
-VALUES (1, 1,100);
-INSERT INTO portfolios_to_stocks (portfolio_id, stock_id, num_shares)
-VALUES (1, 2,50);
+-- Insert portfolios_to_stocks
+INSERT INTO portfolios_to_stocks (portfolio_id, stock_symbol, num_shares) VALUES
+(1, 'AAPL', 10),
+(1, 'GOOGL', 5),
+(2, 'MSFT', 8),
+(2, 'AMZN', 3);

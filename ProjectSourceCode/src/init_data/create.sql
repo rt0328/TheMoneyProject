@@ -13,11 +13,6 @@ CREATE TABLE portfolios (
 );
 
 
-DROP TABLE IF EXISTS stocks;
-CREATE TABLE stocks (
-    stock_id SERIAL PRIMARY KEY,
-    stock_symbol VARCHAR(5) NOT NULL
-);
 
 DROP TABLE IF EXISTS groups;
 CREATE TABLE groups (
@@ -32,20 +27,25 @@ CREATE TABLE groups (
 DROP TABLE IF EXISTS users_to_groups;
 CREATE TABLE users_to_groups (
     user_id VARCHAR(50) NOT NULL,
-    group_id INT NOT NULL
+    group_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(username),
+    FOREIGN KEY (group_id) REFERENCES groups(group_id)
 );
 
 DROP TABLE IF EXISTS groups_to_portfolios;
 CREATE TABLE groups_to_portfolios (
     group_id INT NOT NULL,
-    portfolio_id INT NOT NULL
+    portfolio_id INT NOT NULL,
+    FOREIGN KEY (portfolio_id) REFERENCES portfolios(portfolio_id),
+    FOREIGN KEY (group_id) REFERENCES groups(group_id)
 );
 
 DROP TABLE IF EXISTS portfolios_to_stocks;
 CREATE TABLE portfolios_to_stocks(
     portfolio_id INT NOT NULL,
     stock_symbol VARCHAR(5) NOT NULL,
-    num_shares FLOAT NOT NULL
+    num_shares FLOAT NOT NULL,
+    FOREIGN KEY (portfolio_id) REFERENCES portfolios(portfolio_id),
 );
 
 
