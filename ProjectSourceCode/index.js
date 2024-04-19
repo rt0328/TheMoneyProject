@@ -260,8 +260,74 @@ async function getSymbolPrice(symbol){
 
        // You can return or use the current price as needed
        return currentPrice;
-   } catch(error) {
+    } catch(error) {
        // Log any errors that occur during the API call
        console.error('error', error);
-   }
+    }
 };
+
+
+
+async function supportedStocks(){
+
+  try {
+    const api_key = finnhub.ApiClient.instance.authentications['api_key'];
+    api_key.apiKey = process.env.API_KEY;
+    const finnhubClient = new finnhub.DefaultApi();
+  
+    const data = await new Promise((resolve, reject) => {
+      finnhubClient.stockSymbols(exchange="US", securityType="Common Stock",(error, data, response) => {
+          if (error) {
+              console.log('reject');
+              reject(error);
+          } else {
+            console.log(data);
+              resolve(data);
+          }
+      });
+    });
+    console.log(data);
+    console.log(typeof data);
+  } catch(error) {
+    // Log any errors that occur during the API call
+    console.error('error', error);
+  }
+
+};
+
+//gets analyst recommendations on a given stock by month
+async function stockRecommendations(symbol){
+  try {
+    const api_key = finnhub.ApiClient.instance.authentications['api_key'];
+    api_key.apiKey = process.env.API_KEY;
+    const finnhubClient = new finnhub.DefaultApi();
+
+    const data = await new Promise((resolve, reject) => {
+      finnhubClient.recommendationTrends(symbol, (error, data, response) => {
+          if (error) {
+              reject(error);
+          } else {
+              resolve(data);
+          }
+      });
+      
+    });
+  
+    console.log(data);
+    console.log(typeof data);
+  } catch(error) {
+    // Log any errors that occur during the API call
+    console.error('error', error);
+  }
+
+};
+
+// searchStocks('amazon').then(result => {
+//   console.log(result); // Output: ['APPLE INC', 'APPLE INC', 'APPLE INC', 'APPLE INC', 'APPLE INC', 'APPLE INC']
+// }).catch(error => {
+//   console.error('Error:', error);
+// });
+
+//stockRecommendations(symbol);
+//stockRecommendations('AAPL');
+//supportedStocks();
