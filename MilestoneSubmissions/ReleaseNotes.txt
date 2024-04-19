@@ -1,0 +1,200 @@
+Commits on Apr 8, 2024
+Add openActionModal() to script.js and portfolio page
+
+sko-grace committed 3 days ago
+Merge main into GraceO branch
+
+sko-grace committed 3 days ago
+Add Modal details
+
+sko-grace committed 3 days ago
+Commits on Apr 9, 2024
+Merge remote-tracking branch 'origin' into Ryan_TestRegister
+
+@rt0328
+rt0328 committed 2 days ago
+Merge main into local branch (login)
+
+sko-grace committed 2 days ago
+Create release.yml
+
+@joca7396
+joca7396 committed 2 days ago
+Add test statement for auto release notes
+
+sko-grace committed 2 days ago
+Merge branch 'main' of https://github.com/rt0328/TheMoneyProject
+
+sko-grace committed 2 days ago
+Fixed db and have web page running
+
+@jakelowry
+jakelowry committed 2 days ago
+Merge branch 'main' of github.com:rt0328/TheMoneyProject
+
+@jakelowry
+jakelowry committed 2 days ago
+Add test statement for auto release notes
+
+@rt0328
+sko-grace authored and rt0328 committed 2 days ago
+Create release.yml
+
+@joca7396
+@rt0328
+joca7396 authored and rt0328 committed 2 days ago
+home page skeleton
+
+Ris Karki committed 2 days ago
+changed tests for register, and added some new messages for login/reg… 
+
+@rt0328
+rt0328 committed 2 days ago
+changed tests for register, and added some new messages for login/reg… 
+
+@rt0328
+rt0328 committed 2 days ago
+Fixed db and have web page running
+
+@jakelowry
+@rt0328
+jakelowry authored and rt0328 committed 2 days ago
+home page skeleton
+
+@rt0328
+Ris Karki authored and rt0328 committed 2 days ago
+added unit tests for login API
+
+@rt0328
+rt0328 committed 2 days ago
+removed some console.logs
+
+@rt0328
+rt0328 committed 2 days ago
+Commits on Apr 10, 2024
+Created User Acceptance Tests
+
+@rt0328
+rt0328 committed yesterday
+added unit tests for login API
+
+@rt0328
+rt0328 committed yesterday
+removed some console.logs
+
+@rt0328
+rt0328 committed yesterday
+Created User Acceptance Tests
+
+@rt0328
+rt0328 committed yesterday
+fixed register bug where no username was allowed
+
+@rt0328
+rt0328 committed yesterday
+Merge branch 'main' into Ryan_TestRegister
+
+@rt0328
+rt0328 committed yesterday
+Merge pull request #26 from rt0328/Ryan_TestRegister 
+
+@rt0328
+rt0328 committed yesterday
+Get portfolio route
+
+sko-grace committed yesterday
+updated UAT
+
+Ris Karki committed yesterday
+slight changes to login/register pages
+
+Ris Karki committed yesterday
+Current stock price
+
+@jakelowry
+jakelowry committed yesterday
+Merge pull request #28 from rt0328/rissan 
+
+@riskarki
+riskarki committed yesterday
+Add stock quote api
+
+@jakelowry
+jakelowry committed yesterday
+Alter database and ake get portfolio to display userStocks
+
+sko-grace committed yesterday
+Improved nav bar and page navigation. Made skeleton for group page.
+
+@OliviaBrobin
+OliviaBrobin committed yesterday
+fixed login error message
+
+@rt0328
+rt0328 committed yesterday
+Improved nav bar and navigation. Made group page.
+
+@OliviaBrobin
+OliviaBrobin committed yesterday
+Merge pull request #30 from rt0328/Olivia_Branch_6 
+
+@OliviaBrobin
+OliviaBrobin committed yesterday
+Fixed navigation from home page for when logged out.
+
+@OliviaBrobin
+OliviaBrobin committed yesterday
+Merge pull request #32 from rt0328/Olivia_Branch_7 
+
+@OliviaBrobin
+OliviaBrobin committed yesterday
+Portfolio current value and inidividual stock values reflect what is … 
+
+sko-grace committed yesterday
+updated ui for login and register
+
+@rt0328
+rt0328 committed yesterday
+Merge pull request #33 from rt0328/Ryan_ImproveUI 
+
+@rt0328
+rt0328 committed yesterday
+Added draft for home page and name of website in nav bar.
+
+@OliviaBrobin
+OliviaBrobin committed yesterday
+Merge pull request #34 from rt0328/Olivia_Branch_8 
+
+@OliviaBrobin
+OliviaBrobin committed yesterday
+Restructure db and update index.js accordingly... portfolio_id is har… 
+
+sko-grace committed yesterday
+Add group.hbs. Add navigation between groups, group, and portfolio (h… 
+
+sko-grace committed yesterday
+Remove redundant link to register from login
+
+sko-grace committed yesterday
+Corrected alignment for mockStocks in navbar.
+
+@OliviaBrobin
+OliviaBrobin committed yesterday
+added unit tests back into code
+
+@rt0328
+rt0328 committed yesterday
+Commits on Apr 11, 2024
+changed test structure
+
+@rt0328
+rt0328 committed 4 hours ago
+Commits on Apr 11, 2024
+Merge pull request #35 from rt0328/Ryan_ImproveUI 
+
+@rt0328
+rt0328 committed 4 hours ago
+Add files via upload
+
+@sko-grace
+sko-grace committed 21 minutes ago

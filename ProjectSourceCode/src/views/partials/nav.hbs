@@ -1,19 +1,42 @@
+<style>
+.navbar-color:black
+</style>
+
 <header>
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2">
+    <div class="navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2 ">
       <a class="navbar-brand" href="/"></a>
       <ul class="navbar-nav mr-auto">
         <li class="nav-item">
-            <a href="/" class="nav-link">Home</a>
+            <a href="/home" class="nav-link">Home</a>
         </li>
-        <li class="nav-item">
-            {{#if loggedIn}}
-              <a href = "/portfolio" class = "nav-link">Portfolio</a>
+        {{#if loggedIn}}
+            <li class="nav-item">
+                <a href = "/groups" class = "nav-link">My Groups</a>
+            </li>
+            {{#if portfolioPage}}
+                <li class="nav-item">
+                    <a href = "/group" class = "nav-link">My Group</a>
+                </li>
             {{/if}}
+            {{#if groupPage}}
+                <li class="nav-item">
+                    <a href = "/portfolio" class = "nav-link">My Portfolio</a>
+                </li>
+            {{/if}}
+        {{/if}}
+      </ul>
+    </div>
+
+
+    <div class = "navbar-collapse collapse w-100 order-1 order-md-0 dual-collapse2 " align = "center">
+
+      <ul class="navbar-nav ml-auto" style = "bs-navbar-color:black ; font-weight: bold ; font-size: x-large" align="center">
+        <li class="nav-item" align="center">
+            <a style = "bs-navbar-color:black ; font-weight: bold ; font-size: 29px" align="center">MockStocks</a>
         </li>
       </ul>
     </div>
-    
 
     <div class="navbar-collapse collapse order-3 dual-collapse2">
       <ul class="navbar-nav ml-auto">
@@ -26,10 +49,17 @@
                 <li class="nav-item">
                   <a href = "/register" class = "nav-link">Register</a>
                 </li>
-              {{else}}
+              {{else if registerPage}}
                 <li class="nav-item">
                   <a href = "/login" class = "nav-link"/>Login</a>
                 </li>
+              {{else}}
+                <li class="nav-item">
+                  <a href = "/register" class = "nav-link">Register</a>
+                </li>
+                <li class="nav-item">
+                  <a href = "/login" class = "nav-link"/>Login</a>
+                </li>`
               {{/if}}
             {{/if}}
         </li>

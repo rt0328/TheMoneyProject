@@ -1,0 +1,23 @@
+{{>message}}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    Join Group
+                </div>
+                <div class="card-body">
+                    <form action="/join_group" method="POST">
+                        <div class="input-group mb-3">
+                            <input type="text" id="groupCode" name="groupCode" class="form-control" required placeholder="Group Code">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="submit">Join</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

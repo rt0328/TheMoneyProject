@@ -1,2 +1,14 @@
+.form-control{
+    width: 300px;
+}
 
+.square-icon {
+    width: 125px;
+    height: 125px; 
+    overflow: hidden; 
+}
 
+.small-icon.blue-rim {
+    border: 4px solid #7ACBDD; 
+    border-radius: 10px; 
+}

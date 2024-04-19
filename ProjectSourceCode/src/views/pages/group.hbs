@@ -1,0 +1,48 @@
+
+
+<body>
+  <div class="container my-5">
+
+    <h1>{{groupName}} Group Dashboard</h1>
+
+
+    <div class="card mb-3" style="background-color: pink !important;">
+        <img width="75"  class="m-2" src="/images/{{iconFileName}}" alt="{{group_name}} Icon">
+        <h2 class="m-2">{{groupName}} Group Name</h2>
+        <h4 class="m-2"> Starting Liquidity : {{startingLiquidity}}</h4>
+        <h4 class="m-2"> Join Code : {{joinCode}}</h4>
+    </div>
+
+    <div class="card mb-3" style="background-color: pink !important;">
+        <h3 class="m-2"> My Ranking: {{ranking}}</h5>
+        <h5 class="m-2"> My Current Liquidity : {{currentLiquidity}}</h5>
+        <p class="m-2">Up/Down (amount)%</p>
+    </div>
+
+    {{#each portfolio}}
+    <div class="card mb-3" style="background-color: #{{backgroundColor}} !important;">
+      <div class="card-header d-flex align-items-center">
+        <h3 class="m-2">{{user_name}}</h3>
+      </div>
+      <div class="card-body">
+        <h3 class="m-2">Ranking: {{ranking}}</h3>
+        <h5 class="m-2">${{current_liquidity}}</h5>
+        <!-- Replace balance here with the starting liquidity -->
+        <p class="m-2">Up/Down (amount)%</p>
+
+        <a href="/portfolio?portfolioId={{portfolio_id}}" class="btn btn-light">View Portfolio</a>
+      </div>
+    </div>
+    {{/each}}
+
+    {{#if group_owner}}
+    <div class="container mt-3">
+      <div class="row">
+          <div class="col">
+              <a href="/modify_group" class="btn btn-primary rounded-pill me-1">Modify Group</a>
+          </div>
+      </div>
+    </div>
+    {{/if}}
+
+  <div class="my-5"></div>

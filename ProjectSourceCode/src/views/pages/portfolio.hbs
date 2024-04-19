@@ -1,31 +1,60 @@
-
-<body onload="initializePortfolio()">
+<body onload="initializeActionModal()">
     <div class="container mt-3">
         <h1>Manage Portfolio</h1>
 
         <div class="container mt-2 bg-light rounded-lg p-5 my-3">
-            <label>Current Portofolio Value:</label>
-            <h2 id="portfolioCurrValue"></h2>
+            <div class="row">
+                <div class="col">
+                    <label>Current Portfolio Value:</label>
+                    <h2 id="portfolioCurrValue">${{currPortfolioValue}}</h2>
+                </div>
+                <div class="col">
+                    <label>Available Liquidity:</label>
+                    <h2 id="currentLiquidity">${{currentLiquidity}}</h2>
+                </div>
+            </div>
         </div>
+
 
         <table class="table">
             <thead>
                 <tr>
                 <th scope="col">#</th>
-                <th scope="col">Assett</th>
+                <th scope="col">Asset</th>
                 <th scope="col">Number of Shares</th>
                 <th scope="col">Value in US Dollars</th>
                 <th scope="col">Growth</th>
                 <th scope="col">Options</th>
                 </tr>
             </thead>
-            <tbody id="assetTableBody"></tbody>
+            <tbody id="assetTableBody">
+                {{#each userStocks}}
+                <tr id="row-{{stock_id}}">
+                    <th scope="row">{{@index}}</th>
+                    <td class="stock-symbol">{{stock_symbol}}</td>
+                    <td>{{num_shares}}</td>
+                    <td>${{current_value}}</td>
+                    <td>-</td>
+                    <td>
+                        <button type="button" class="btn btn-secondary" onclick="openActionModal(1,{{stock_id}})">Buy</button>
+                        <button type="button" class="btn btn-secondary" onclick="openActionModal(2,{{stock_id}})">Sell</button>
+                    </td>
+                </tr>
+                {{/each}}
+                <tr class="table-light">
+                    <th>Total</th>
+                    <td></td>
+                    <td></td>
+                    <td>${{currPortfolioValue}}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>
         </table>
 
-
         <!-- Button for 'Purchase Stock' modal -->
-        <button type="button" class="btn btn-secondary">+ Purchase Stock</button>
-        
+        <button type="button" class="btn btn-secondary" onclick="openActionModal(3)">+ Purchase New Stock</button>
 
     </div>
 </body>
+{{>modal}}
