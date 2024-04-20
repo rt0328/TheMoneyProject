@@ -22,11 +22,11 @@ CREATE TABLE stocks (
 DROP TABLE IF EXISTS groups;
 CREATE TABLE groups (
     group_id SERIAL PRIMARY KEY,
-    group_name VARCHAR(50) NOT NULL,
+    group_name VARCHAR(100) NOT NULL,
     admin_user VARCHAR(50) NOT NULL,
     starting_liquidity INT NOT NULL,
     icon_num INT,
-    group_code INT
+    group_code VARCHAR(6) NOT NULL
 );
 
 DROP TABLE IF EXISTS users_to_groups;

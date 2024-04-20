@@ -16,6 +16,50 @@ const THEME_COLORS = [
     "hex" : "ED6262"
   },
 ]
+
+const ICONS = [
+  {
+    "filename" : "bezos.png",
+    "icon_num": 1,
+  },
+  {
+    "filename" : "doge.png",
+    "icon_num": 2,
+  },
+  {
+    "filename" : "elon.png",
+    "icon_num": 3,
+  },
+  {
+    "filename" : "lisa.png",
+    "icon_num": 4,
+  },
+  {
+    "filename" : "matthew.png",
+    "icon_num": 5,
+  },
+  {
+    "filename" : "oprah.png",
+    "icon_num": 6,
+  },
+  {
+    "filename" : "rihanna.png",
+    "icon_num": 7,
+  },
+  {
+    "filename" : "stewie.png",
+    "icon_num": 8,
+  },
+  {
+    "filename" : "stonks.png",
+    "icon_num": 9,
+  },
+  {
+    "filename" : "zuckerberg.png",
+    "icon_num": 10,
+  },
+]
+
 // ----------------------------------   DEPENDENCIES  ----------------------------------------------
 const express = require('express');
 const app = express();
@@ -71,6 +115,8 @@ app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, '/src/views'));
 app.use(bodyParser.json());
+app.use(express.static('public'));
+
 
 
 
@@ -239,39 +285,163 @@ app.get('/logout', (req, res) => {
 
 
 
-app.get('/groups', async (req,res) => {
-  res.render('pages/groups', {loggedIn: true})
+app.get('/groups', async (req, res) => {
+  const user = req.session.user;
+
+  try {
+    // Get distinct groups that the user is in along with corresponding portfolio IDs
+    const groupData = await db.manyOrNone(`
+      SELECT DISTINCT ON (g.group_id) g.*, gp.portfolio_id
+      FROM groups g
+      INNER JOIN users_to_groups ug ON g.group_id = ug.group_id
+      INNER JOIN groups_to_portfolios gp ON g.group_id = gp.group_id
+      WHERE ug.user_id = $1
+    `, [user.username]);
+
+    // Append iconFileName and color to each group in groupData
+    groupData.forEach((group, index) => {
+      group.iconFileName = getIconFilename(group.icon_num);
+
+      // Alternate background color based on index
+      const colorIndex = index % THEME_COLORS.length;
+      group.backgroundColor = THEME_COLORS[colorIndex].hex;
+    });
+
+    console.log(groupData);
+    res.render('pages/groups', { groupData, loggedIn: true });
+  } catch (error) {
+    // Handle error
+    console.error('Error fetching group data:', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
-app.get('/create_group', async (req,res) => {
-  res.render('pages/create_group', {loggedIn: true})
+
+
+
+app.get('/create_group', async (req, res) => {
+  res.render('pages/create_group', { loggedIn: true, icons: ICONS });
 });
+
 
 app.post('/create_group', async (req, res) => {
-  if (req.body.groupname === '' || req.body.startingliquidity === '') {
-    res.status(400).render('pages/register', {message: "Please enter a group name and starting liquidity", error: 1});
-
-  }
-  else {
-    const insertGroup = async (groupname, startingliquidity) => {
+  console.log(req.body);
+  if (req.body.groupname === '' || req.body.startingliquidity === '' || req.body.icon_num === '') {
+      res.status(400).render('pages/create_group', { loggedIn: true, icons: ICONS, message: "Please enter a group name, starting liquidity, and select an icon", error: 1 });
+  } else {
       try {
-        await db.none('INSERT INTO groups(admin_user, group_name, starting_liquidity) VALUES ($1, $2, $3)', [req.session.user.username, groupname, startingliquidity]);
-        return true;
+          // Function to generate a unique group code
+          function generateGroupCode() {
+              const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+              let code = '';
+              for (let i = 0; i < 6; i++) {
+                  code += characters.charAt(Math.floor(Math.random() * characters.length));
+              }
+              return code;
+          }
+
+          // Function to check if group code is unique
+          async function isGroupCodeUnique(code) {
+              const existingGroup = await db.oneOrNone('SELECT group_id FROM groups WHERE group_code = $1', [code]);
+              return !existingGroup;
+          }
+
+
+          // Generate a unique group code
+          let groupCode;
+          let unique = false;
+          while (!unique) {
+              groupCode = generateGroupCode();
+              unique = await isGroupCodeUnique(groupCode);
+          }
+
+          // Check if the group code already exists
+          const groupCodeExists = await db.oneOrNone('SELECT group_code FROM groups WHERE group_code = $1', [groupCode]);
+          if (groupCodeExists) {
+              // If the group code exists, render an error message
+              return res.status(400).render('pages/create_group', { loggedIn: true, icons: ICONS, message: "Group code already exists. Please try again.", error: 1 });
+          }
+
+          // Insert the group into the database
+          await db.none('INSERT INTO groups(admin_user, group_name, starting_liquidity, icon_num, group_code) VALUES ($1, $2, $3, $4, $5)', [req.session.user.username, req.body.groupname, req.body.startingliquidity, req.body.icon_num, groupCode]);
+
+          // Create portfolio for admin user
+          const portfolioId = await createPortfolio(req.session.user.username, req.body.startingliquidity);
+
+          // Add the user to the group
+          await db.none('INSERT INTO users_to_groups(user_id, group_id) VALUES ($1, (SELECT group_id FROM groups WHERE group_code = $2))', [req.session.user.username, groupCode]);
+
+          // Add the group to the user's portfolio
+          await db.none('INSERT INTO groups_to_portfolios(group_id, portfolio_id) VALUES ((SELECT group_id FROM groups WHERE group_code = $1), $2)', [groupCode, portfolioId]);
+
+          // Redirect to the My Groups page
+          res.redirect(`/group_code?groupCode=${groupCode}`);
       } catch (error) {
-        console.error('Error inserting group:', error);
-        return false;
+          console.error('Error inserting group:', error);
+          res.status(500).send('Internal Server Error');
       }
-    };
-
-    const success = await insertGroup(req.body.groupname, req.body.startingliquidity);
-
-    if (success) {
-      res.status(302).render('pages/groups',{message: "Group Added Successfully"});
-    } else {
-      res.status(400).render('pages/create_group',{message: "Group already exists. Please try a new group name.", error: 1});
-    }
   }
 });
+
+
+
+app.get('/group_code', async (req,res) => {
+  const groupCode = req.query.groupCode;
+  res.render('pages/group_code', { loggedIn: true, groupCode : groupCode });
+});
+
+app.get('/join_group', (req, res) => {
+  res.render('pages/join_group', {loggedIn : true});
+});
+
+// Route to handle joining a group
+app.post('/join_group', async (req, res) => {
+  const groupCode = req.body.groupCode;
+  const username = req.session.user.username;
+
+  try {
+    // Check if the group with the provided code exists
+    const group = await db.oneOrNone('SELECT * FROM groups WHERE group_code = $1', [groupCode]);
+    if (!group) {
+      // Group not found, send JSON response with an error message
+      return res.render('pages/join_group', { message: 'This group does not exist!', loggedIn: true , error : true});
+    }
+
+    // Check if the user is already in the group
+    const userInGroup = await db.oneOrNone('SELECT * FROM users_to_groups WHERE user_id = $1 AND group_id = $2', [username, group.group_id]);
+    if (userInGroup) {
+      // User is already in the group, send JSON response with an error message
+      return res.render('pages/join_group', { message: 'You are already in the group.', loggedIn: true , error : true});
+    }
+
+    // Add user to the group
+    await db.none('INSERT INTO users_to_groups (user_id, group_id) VALUES ($1, $2)', [username, group.group_id]);
+
+    // Create a new portfolio for the user
+    const portfolioId = await createPortfolio(username, group.starting_liquidity);
+
+    // Connect the group to the new portfolio
+    await db.none('INSERT INTO groups_to_portfolios (group_id, portfolio_id) VALUES ($1, $2)', [group.group_id, portfolioId]);
+
+    // Send JSON response indicating success
+    return res.redirect('/groups')
+  } catch (error) {
+    console.error('Error joining group:', error);
+    // Send JSON response with error message
+    return res.render('pages/join_group', { message: 'Failure to join group.', loggedIn: true , error : true});
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
 
 app.get('/group', async (req,res) => {
   const groupId = req.query.groupId || req.session.groupId;
@@ -536,6 +706,33 @@ function formatDollarAmount(amount) {
 }
 
 
+function getIconFilename(iconNum) {
+  const icon = ICONS.find(icon => icon.icon_num === iconNum);
+  return icon ? icon.filename : null;
+}
 
 
 
+
+// Function to generate a unique group code
+function generateGroupCode() {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+      code += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return code;
+}
+
+
+// Function to create a portfolio for the user
+async function createPortfolio(username, startingLiquidity) {
+  try {
+      // Insert the portfolio into the database
+      const result = await db.one('INSERT INTO portfolios (user_id, current_liquidity) VALUES ($1, $2) RETURNING portfolio_id', [username, startingLiquidity]);
+      return result.portfolio_id;
+  } catch (error) {
+      console.error('Error creating portfolio:', error);
+      throw error;
+  }
+}

@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+{{>message}}
+>>>>>>> main
 <div class="container mt-3">
     <h1>Create Group</h1>
     <form class="login-form" action="/create_group" method="POST">
@@ -7,9 +11,63 @@
         </div>
         <div class="mb-1">
             <label class="form-label" for="startingliquidity">Starting Liquidity:</label>
+<<<<<<< HEAD
             <input class="form-control" type="text" name="startingliquidity" id="startingliquidity" /><br />
         </div>
         <button class="btn btn-secondary" type="submit">Submit</button>
         <br/>
     </form>
 </div>
+=======
+            <input class="form-control" type="number" name="startingliquidity" id="startingliquidity" /><br />
+        </div>
+        <!-- Icon selection grid -->
+        <div class="mb-1">
+            <label class="form-label">Select Icon:</label>
+            <div class="container">
+                <div class="row row-cols-2 row-cols-md-5 g-3">
+                    {{#each icons}}
+                    <div class="col">
+                        <!-- Add a wrapper div to make each icon square -->
+                        <div class="square-icon">
+                            <img class="small-icon img-fluid" src="/images/{{filename}}" alt="{{filename}}" data-iconnum="{{icon_num}}">
+                        </div>
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+        <!-- End of icon selection grid -->
+        <!-- Hidden input field for icon_num -->
+        <input type="hidden" id="icon_num" name="icon_num" value="">
+        <div class="my-3"></div>
+        <button class="btn btn-secondary" type="submit">Submit</button>
+        <br/>
+    </form>
+</div>
+
+<script>
+    // Script to handle icon selection
+    document.addEventListener('DOMContentLoaded', function() {
+        const smallIcons = document.querySelectorAll('.small-icon');
+
+        smallIcons.forEach(icon => {
+            icon.addEventListener('click', function() {
+                // Remove the blue rim from previously selected icon, if any
+                const prevSelectedIcon = document.querySelector('.small-icon.blue-rim');
+                if (prevSelectedIcon) {
+                    prevSelectedIcon.classList.remove('blue-rim');
+                }
+
+                // Add blue rim to the clicked icon
+                icon.classList.add('blue-rim');
+                
+                // Set the value of the hidden input field to the selected icon's icon_num
+                const iconNum = icon.dataset.iconnum;
+                document.querySelector('#icon_num').value = iconNum;
+            });
+        });
+    });
+</script>
+
+>>>>>>> main
