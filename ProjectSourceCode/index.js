@@ -70,6 +70,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
 const bcrypt = require('bcrypt'); //  To hash passwords
 const { error} = require('console');
+const url = require('url');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
