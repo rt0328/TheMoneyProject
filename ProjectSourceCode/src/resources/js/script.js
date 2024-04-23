@@ -1,16 +1,54 @@
 const LOOKUP_STOCKS = [
-    {
-        "symbol" : "GOOGL",
-    },
-    {
-        "symbol" : "AAPL",
-    },
-    {
-        "symbol" : "AMZN",
-    },
-    {
-        "symbol" : "MSFT",
-    }
+    { "symbol": "AAPL" },
+    { "symbol": "MSFT" },
+    { "symbol": "AMZN" },
+    { "symbol": "GOOGL" },
+    { "symbol": "META" },
+    { "symbol": "TSLA" },
+    { "symbol": "NVDA" },
+    { "symbol": "JPM" },
+    { "symbol": "JNJ" },
+    { "symbol": "V" },
+    { "symbol": "PG" },
+    { "symbol": "HD" },
+    { "symbol": "MA" },
+    { "symbol": "DIS" },
+    { "symbol": "PYPL" },
+    { "symbol": "UNH" },
+    { "symbol": "BAC" },
+    { "symbol": "INTC" },
+    { "symbol": "VZ" },
+    { "symbol": "CMCSA" },
+    { "symbol": "ADBE" },
+    { "symbol": "CSCO" },
+    { "symbol": "CRM" },
+    { "symbol": "KO" },
+    { "symbol": "NFLX" },
+    { "symbol": "PEP" },
+    { "symbol": "MRK" },
+    { "symbol": "WMT" },
+    { "symbol": "XOM" },
+    { "symbol": "T" },
+    { "symbol": "ABBV" },
+    { "symbol": "MDT" },
+    { "symbol": "ABT" },
+    { "symbol": "NKE" },
+    { "symbol": "BMY" },
+    { "symbol": "HON" },
+    { "symbol": "AVGO" },
+    { "symbol": "LMT" },
+    { "symbol": "NEE" },
+    { "symbol": "PFE" },
+    { "symbol": "QCOM" },
+    { "symbol": "LLY" },
+    { "symbol": "TXN" },
+    { "symbol": "USB" },
+    { "symbol": "MO" },
+    { "symbol": "DHR" },
+    { "symbol": "SBUX" },
+    { "symbol": "NOW" },
+    { "symbol": "SPG" },
+    { "symbol": "LIN" }
 ];
 
 
@@ -410,20 +448,13 @@ function handleSellStockFormSubmission(event) {
 }
 
 
-function copyToClipboard() {
-    // Select the input element containing the group join code
-    const input = document.getElementById('groupJoinCode');
-  
-    // Select the text in the input element
-    input.select();
-  
-    // Copy the selected text to the clipboard
+function copyToClipboard(text) {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
     document.execCommand('copy');
-  
-    // Deselect the text
-    input.setSelectionRange(0, 0);
-  
-    // Optionally, provide feedback to the user that the code has been copied
-    alert('Group join code copied to clipboard!');
+    document.body.removeChild(el);
+    alert('Join code copied to clipboard!');
   }
   

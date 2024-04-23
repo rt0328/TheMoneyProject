@@ -69,7 +69,8 @@ const pgp = require('pg-promise')();
 const bodyParser = require('body-parser');
 const session = require('express-session'); // To set the session object. To store or access session data, use the `req.session`, which is (generally) serialized as JSON by the store.
 const bcrypt = require('bcrypt'); //  To hash passwords
-const { error} = require('console');
+const { error, group} = require('console');
+const url = require('url');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
@@ -283,7 +284,6 @@ app.get('/logout', (req, res) => {
 
 
 
-
 app.get('/groups', async (req, res) => {
   const user = req.session.user;
 
@@ -307,7 +307,11 @@ app.get('/groups', async (req, res) => {
       group.backgroundColor = THEME_COLORS[colorIndex].hex;
     });
 
+    // Fetch current portfolio value and ranking for each group
+
+    console.log("GROUP DATA:");
     console.log(groupData);
+
     res.render('pages/groups', { groupData, loggedIn: true });
   } catch (error) {
     // Handle error
@@ -433,50 +437,92 @@ app.post('/join_group', async (req, res) => {
   }
 });
 
+app.get('/edit_group', async (req,res) => {
+  res.render('pages/edit_group', {loggedIn : true, })
+})
 
 
 app.get('/group', async (req, res) => {
-  const groupId = req.query.groupId || req.session.groupId;
-  const user = req.session.user;
-
-  console.log(groupId)
-
   try {
-    
-    // Verify user belongs to the group
-    const userGroups = await db.manyOrNone('SELECT * FROM users_to_groups WHERE user_id = $1 AND group_id = $2', [user.username, groupId]);
-    if (!userGroups) {
-      return res.status(500).send('Error fetching user groups.');
-    }
+    // Get current user from session and groupId from params
+    const currentUser = req.session.user;
+    const groupId = req.query.groupId;
 
-    console.log(userGroups);
 
-    if (userGroups.length === 0) {
+    console.log(`Group ID: ${groupId}`)
+
+    // 1. Verify the user belongs to the group and throw permission error if not
+    const userInGroup = await db.oneOrNone('SELECT * FROM users_to_groups WHERE user_id = $1 AND group_id = $2', [currentUser.username, groupId]);
+    if (!userInGroup) {
       return res.status(403).send('You do not have permission to access this group.');
     }
 
-    // Get the group data
+    // Get group data
     const groupData = await db.oneOrNone('SELECT * FROM groups WHERE group_id = $1', [groupId]);
-
-    // Get the portfolio id of the logged-in user in the specified group
-    const portfolioData = await db.oneOrNone('SELECT portfolio_id FROM groups_to_portfolios WHERE group_id = $1 AND portfolio_id IN (SELECT portfolio_id FROM portfolios WHERE user_id = $2)', [groupId, user.username]);
-    const portfolioId = portfolioData ? portfolioData.portfolio_id : null;
-
-    // Get list of other portfolios
-    const otherPortfoliosData = await db.manyOrNone('SELECT portfolio_id FROM groups_to_portfolios WHERE group_id = $1 AND portfolio_id != $2', [groupId, portfolioId]);
-    const otherPortfolioIds = otherPortfoliosData.map(row => row.portfolio_id);
-
-    console.log('group data, other portfolios:');
     console.log(groupData);
-    console.log(otherPortfolioIds);
 
-    // Render the group page with data
-    res.render('pages/group', { groupData: groupData, loggedIn: true, otherPortfolios: otherPortfolioIds });
+    // Get group icon
+    groupData.iconFileName = getIconFilename(groupData.icon_num);
+
+    // 2. Get all of the portfolios (including current user) from db
+    const allPortfolios = await db.manyOrNone(`
+      SELECT p.*, u.username AS user_id
+      FROM portfolios p
+      INNER JOIN users_to_groups ug ON p.user_id = ug.user_id
+      INNER JOIN users u ON p.user_id = u.username
+      INNER JOIN groups_to_portfolios gp ON p.portfolio_id = gp.portfolio_id
+      WHERE ug.group_id = $1
+      AND gp.group_id = $1
+    `, [groupId]);
+
+    console.log("All Portfolios:")
+    console.log(allPortfolios);
+
+    // 3. For each portfolio, use getPortfolioValue to retrieve currentValue and topStock.
+    // Additionally, add alternating background color using THEME_COLORS
+    const portfolioData = [];
+    for (const portfolio of allPortfolios) {
+      const { portfolioValue, topStock } = await getPortfolioValue(portfolio);
+      const colorIndex = allPortfolios.indexOf(portfolio) % THEME_COLORS.length;
+      const backgroundColor = THEME_COLORS[colorIndex].hex;
+      portfolioData.push({ ...portfolio, portfolioValue, topStock, backgroundColor });
+    }
+
+    console.log("PortfolioData with portfolioValue and top stock:")
+    console.log(portfolioData);
+
+    // 4. Assign a rank to each portfolio based on currentValue. #1 should get the highest currentValue
+    portfolioData.sort((a, b) => b.portfolioValue - a.portfolioValue);
+    portfolioData.forEach((portfolio, index) => {
+      portfolio.rank = index + 1;
+    });
+
+    console.log("Portfolios with ranks:")
+    console.log(portfolioData);
+
+    // 5. See if current user is admin user of the group. If true, pass
+    const isAdmin = currentUser.username === portfolioData[0].user_id;
+
+    console.log(`isAdmin : ${isAdmin}`)
+
+    // 6. Once rankings are assigned, split portfolios into two: userPortfolio and otherPortfolios
+    const [userPortfolio] = portfolioData.filter(portfolio => portfolio.user_id === currentUser.username);
+    const otherPortfolios = portfolioData.filter(portfolio => portfolio.user_id !== currentUser.username);
+
+    console.log("User Portfolio:")
+    console.log(userPortfolio);
+
+    console.log("Other portfolios:")
+    console.log(otherPortfolios);
+
+    res.render('pages/group', { loggedIn: true, isAdmin, userPortfolio, otherPortfolios, groupData });
   } catch (error) {
     console.error('Error fetching group data:', error);
     res.status(500).send('Internal Server Error');
   }
 });
+
+
 
 
 
@@ -745,17 +791,9 @@ app.get('/getSymbolPrice/:symbol', async (req, res) => {
 
 function formatDollarAmount(amount) {
   // Round the amount to two decimal places
-  amount = Number(amount).toFixed(2);
-
-  // Convert amount to string and split it into whole and decimal parts
-  let [wholePart, decimalPart] = String(amount).split('.');
-
-  // Add commas every three digits from the right in the whole part
-  wholePart = wholePart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
-  // Return formatted amount
-  return wholePart + '.' + decimalPart;
+  return Number(amount).toFixed(2);
 }
+
 
 
 function getIconFilename(iconNum) {
@@ -777,5 +815,55 @@ async function createPortfolio(username, startingLiquidity) {
   } catch (error) {
       console.error('Error creating portfolio:', error);
       throw error;
+  }
+}
+
+
+async function getPortfolioValue(portfolio) {
+  let currPortfolioValue = portfolio.current_liquidity; // Start with current liquidity
+  let topStock = null;
+  let bestPerformance = -Infinity;
+
+  // Fetch stock data from portfolios_to_stocks table for the specified portfolio
+  const stockData = await db.manyOrNone('SELECT * FROM portfolios_to_stocks WHERE portfolio_id = $1', [portfolio.portfolio_id]);
+
+  // Calculate current value for each stock and find the best performing one
+  for (const stock of stockData) {
+    // Get current price for the stock symbol
+    const currentPrice = await getSymbolPrice(stock.stock_symbol);
+    const currStockValue = currentPrice * stock.num_shares;
+    currPortfolioValue += currStockValue;
+
+    // Calculate performance of the stock
+    const performance = currStockValue;
+
+    // Update topStock if the current stock has better performance
+    if (performance > bestPerformance) {
+      topStock = stock.stock_symbol;
+      bestPerformance = performance;
+    }
+  }
+
+  // Return the portfolio value and the best performing stock
+  return { portfolioValue: formatDollarAmount(currPortfolioValue), topStock };
+}
+
+
+async function getCurrentRanking(groupId, user) {
+  try {
+    // Fetch all portfolios for the group
+    const portfolios = await db.manyOrNone('SELECT * FROM groups_to_portfolios WHERE group_id = $1', [groupId]);
+
+    // Calculate ranking based on portfolio value
+    portfolios.sort((a, b) => b.portfolio_value - a.portfolio_value);
+
+    // Find index of current user's portfolio
+    const currentUserIndex = portfolios.findIndex(portfolio => portfolio.user_id === user.username);
+
+    // Add 1 to index to get ranking
+    return currentUserIndex + 1;
+  } catch (error) {
+    console.error('Error calculating current ranking:', error);
+    throw error;
   }
 }

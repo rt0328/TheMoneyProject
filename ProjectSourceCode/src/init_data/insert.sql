@@ -1,7 +1,12 @@
--- Insert users
-INSERT INTO users (username, password) VALUES
-('user1', 'password1'),
-('user2', 'password2');
+-- Insert a new user (password hashes to examplepassword)
+-- DO NOT DELETE: THIS IS USED IN UNIT TEST!!!!!
+INSERT INTO users(username, password)
+VALUES ('exampleuser', '$2a$10$Fb5oD61P4mzgC8UXi.oUYOtOyWal7DmLHuXKPasscfAp71hRIJUK.') RETURNING username;
+
+
+-- Insert a new group
+INSERT INTO groups (admin_user, group_name, starting_liquidity, icon_num, group_code)
+VALUES ('grace', 'examplegroup', 100000, 1, 'AD65TH');
 
 -- Insert portfolios
 INSERT INTO portfolios (user_id, current_liquidity) VALUES

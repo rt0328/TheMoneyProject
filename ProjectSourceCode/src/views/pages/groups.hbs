@@ -9,13 +9,13 @@
         <h3 class="m-2">{{group_name}}</h3>
       </div>
       <div class="card-body">
-        <h5 class="card-title">${{starting_liquidity}}</h5>
-        <!-- Replace balance here with the starting liquidity -->
-        <p class="card-text">Up/Down (amount)%</p>
-        <p class="card-text">{{group_code}}</p>
+        <h5 class="card-title">Starting Liquidity: ${{starting_liquidity}}</h5>
 
-        <a href="/group?groupId={{group_id}}" class="btn btn-light">View Group</a>
-        <a href="/portfolio?portfolioId={{portfolio_id}}" class="btn btn-light">View Portfolio</a>
+        <!-- Wrap the buttons in a container -->
+        <div class="btn-group d-flex" style="width: 100%;">
+          <a class="btn btn-light flex-fill" style="background-color: #{{backgroundColor}};" href="/group?groupId={{group_id}}" >View Group</a>
+          <a class="btn btn-light flex-fill" style="background-color: #{{backgroundColor}};" href="/portfolio?portfolioId={{portfolio_id}}" >View Portfolio</a>
+        </div>
       </div>
     </div>
     {{/each}}
@@ -39,3 +39,5 @@
     
   </div>
 </body>
+
+

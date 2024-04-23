@@ -1,55 +1,68 @@
-<h1>My Group Dashboard</h1>
-<h3>Group ID : {{groupData.group_id}}</h3>
-<h3>Group ID : {{groupData.group_name}}</h3>
-<h3>Group ID : {{groupData.admin_user}}</h3>
-<h3>Group ID : {{groupData.starting_liquidity}}</h3>
-<h3>Group ID : {{groupData.icon_num}}</h3>
-<h3>Group ID : {{groupData.group_code}}</h3>
-
-
 <body>
   <div class="container my-5">
-
-    <h1>{{groupData.group_name}} Group Dashboard</h1>
-
-
-    <div class="card mb-3" style="background-color: pink !important;">
-        <img width="75"  class="m-2" src="/images/{{iconFileName}}" alt="{{groupData.group_name}} Icon">
-        <h2 class="m-2">{{groupData.group_name}} Group Name</h2>
-        <h4 class="m-2"> Starting Liquidity : {{groupData.starting_liquidity}}</h4>
-        <h4 class="m-2"> Join Code : {{groupData.group_code}}</h4>
-    </div>
-
-    <div class="card mb-3" style="background-color: pink !important;">
-        <h3 class="m-2"> My Ranking: {{ranking}}</h5>
-        <h5 class="m-2"> My Current Liquidity : {{currentLiquidity}}</h5>
-        <p class="m-2">Up/Down (amount)%</p>
-    </div>
-
-    {{#each portfolio}}
-    <div class="card mb-3" style="background-color: #{{backgroundColor}} !important;">
-      <div class="card-header d-flex align-items-center">
-        <h3 class="m-2">{{user_name}}</h3>
-      </div>
-      <div class="card-body">
-        <h3 class="m-2">Ranking: {{ranking}}</h3>
-        <h5 class="m-2">${{current_liquidity}}</h5>
-        <!-- Replace balance here with the starting liquidity -->
-        <p class="m-2">Up/Down (amount)%</p>
-
-        <a href="/portfolio?portfolioId={{portfolio_id}}" class="btn btn-light">View Portfolio</a>
+    <div class="container my-4">
+      <div class="row align-items-center">
+        <div class="col-auto">
+          <img width="100" src="/images/{{groupData.iconFileName}}" alt="{{groupData.group_name}} Icon" class="mr-2">
+        </div>
+        <div class="col">
+          <h1 class="mb-0">{{groupData.group_name}}</h1>
+        </div>
+        <div class="col-auto">
+          {{#if isAdmin}}
+            <a href="/edit_group"><img width="40" src="/images/gear.svg" alt="Settings"></a>
+          {{/if}}
+        </div>
       </div>
     </div>
-    {{/each}}
 
-    {{#if group_owner}}
-    <div class="container mt-3">
-      <div class="row">
-          <div class="col">
-              <a href="/modify_group" class="btn btn-primary rounded-pill me-1">Modify Group</a>
+    <div class="card mb-3" style="background-color: #f8f9fa !important;">
+      <div class="d-flex align-items-center p-3">
+        <div class="d-flex align-items-center justify-content-center rounded-circle text-white p-2" style="width: 75px; height: 75px; background-color: #7ACBDD !important;">
+          <h3 class="m-0">#{{userPortfolio.rank}}</h3> <!-- Assuming this is the current user's portfolio -->
+        </div>
+        <h2 class="p-3 m-0">My Portfolio</h2>
+      </div>
+      <h4 class="p-3">Current Value: ${{userPortfolio.portfolioValue}}</h4>
+      <h4 class="p-3">
+        Top Performing Stock: 
+        {{#if userPortfolio.topStock}}
+          {{userPortfolio.topStock}}
+        {{else}}
+          N/A
+        {{/if}}
+      </h4>
+      <a href="/portfolio?portfolioId={{userPortfolio.portfolio_id}}" class="btn btn-light">Manage Portfolio</a>
+
+    </div>
+
+
+    <h2 class="py-3 m-0">Current Rankings:</h2>
+
+    <div class="container">
+      {{#if otherPortfolios.length}}
+        {{#each otherPortfolios}}
+          <div class="card mb-3" style="background-color: #{{backgroundColor}} !important;">
+            <div class="card-header d-flex align-items-center">
+              <div class="rounded-circle bg-white d-flex justify-content-center align-items-center p-2 me-3" style="width: 50px; height: 50px;">
+                <h4 class="m-0">#{{rank}}</h4>
+              </div>
+              <h3 class="m-2">User : {{user_id}}</h3>
+            </div>
+            <div class="card-body text-left">
+              <h5 class="m-2 mb-3">Portfolio Value: ${{portfolioValue}}</h5>
+              <p class="m-2">Top Stock: {{#if topStock}}{{topStock}}{{else}}N/A{{/if}}</p>
+            </div>
           </div>
-      </div>
+        {{/each}}
+      {{else}}
+        <p>No other portfolios found.</p>
+      {{/if}}
     </div>
+
+    {{#if isAdmin}}
+      <button class="btn btn-primary my-4" onclick="copyToClipboard('{{groupData.group_code}}')">Copy Join Code: {{groupData.group_code}}</button>
     {{/if}}
 
-  <div class="my-5"></div>
+  </div>
+</body>
