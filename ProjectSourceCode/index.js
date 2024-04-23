@@ -12,8 +12,8 @@ const THEME_COLORS = [
     "hex" : "7ACBDD"
   },
   {
-    "color" : "red",
-    "hex" : "ED6262"
+    "color" : "orange",
+    "hex" : "f7ab56"
   },
 ]
 
