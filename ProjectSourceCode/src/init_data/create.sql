@@ -45,7 +45,7 @@ CREATE TABLE portfolios_to_stocks(
     portfolio_id INT NOT NULL,
     stock_symbol VARCHAR(5) NOT NULL,
     num_shares FLOAT NOT NULL,
-    FOREIGN KEY (portfolio_id) REFERENCES portfolios(portfolio_id),
+    FOREIGN KEY (portfolio_id) REFERENCES portfolios(portfolio_id)
 );
 
 

@@ -1,7 +1,9 @@
 -- Insert a new user (password hashes to examplepassword)
 -- DO NOT DELETE: THIS IS USED IN UNIT TEST!!!!!
 INSERT INTO users(username, password)
-VALUES ('exampleuser', '$2a$10$Fb5oD61P4mzgC8UXi.oUYOtOyWal7DmLHuXKPasscfAp71hRIJUK.') RETURNING username;
+VALUES
+('user1', '$2a$10$Fb5oD61P4mzgC8UXi.oUYOtOyWal7DmLHuXKPasscfAp71hRIJUK.'),
+('user2','$2a$10$Fb5oD61P4mzgC8UXi.oUYOtOyWal7DmLHuXKPasscfAp71hRIJUK.') RETURNING username;
 
 
 -- Insert a new group
