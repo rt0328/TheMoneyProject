@@ -220,4 +220,8 @@ app.get('/portfolio', (req, res) => {
   res.render('pages/portfolio', { loggedIn: true });
 });
 
+app.get('/graphtest', (req, res) => {
+ 
+    res.render('pages/graphtest');
+  });
 
