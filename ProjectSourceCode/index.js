@@ -142,10 +142,6 @@ app.use(
 
 // -------------------------------------  START THE SERVER   ----------------------------------------------
 
-//normal server
-// app.listen(3000, () => {
-//   console.log('Server is listening on port 3000');
-// });
 
 //testing module
 module.exports = app.listen(3000, ()=>{
@@ -202,7 +198,6 @@ app.post('/login', async (req, res) => {
   if (result.status === 'success') {
     // If the user is found and password matches, redirect to /portfolio route after setting the session.
     req.session.user = result.user;
-    console.log('Success!')
     req.session.save(() => {
       res.redirect('/groups');
     });
@@ -309,8 +304,6 @@ app.get('/groups', async (req, res) => {
 
     // Fetch current portfolio value and ranking for each group
 
-    console.log("GROUP DATA:");
-    console.log(groupData);
 
     res.render('pages/groups', { groupData, loggedIn: true });
   } catch (error) {
@@ -330,7 +323,6 @@ app.get('/create_group', async (req, res) => {
 
 
 app.post('/create_group', async (req, res) => {
-  console.log(req.body);
   if (req.body.groupname === '' || req.body.startingliquidity === '' || req.body.icon_num === '') {
       res.status(400).render('pages/create_group', { loggedIn: true, icons: ICONS, message: "Please enter a group name, starting liquidity, and select an icon", error: 1 });
   } else {
@@ -437,9 +429,171 @@ app.post('/join_group', async (req, res) => {
   }
 });
 
-app.get('/edit_group', async (req,res) => {
-  res.render('pages/edit_group', {loggedIn : true, })
-})
+app.get('/edit_group', async (req, res) => {
+  // Retrieve the group ID from the request query
+  const groupId = req.query.groupId;
+
+  // Check if the current user is logged in
+  if (req.session.user) {
+      // Query the groups table to check if the current user is the admin of the specified group
+      const groupData = await db.oneOrNone('SELECT * FROM groups WHERE group_id = $1', [groupId]);
+      
+      // Check if the query returned a result
+      if (groupData) {
+          // Extract the admin user of the group from the query result
+          const adminUser = groupData.admin_user;
+          
+          // Check if the current user matches the admin user of the group
+          if (req.session.user.username === adminUser) {
+              // User is the admin of the group, render the edit_group page
+              res.render('pages/edit_group', { loggedIn: true, groupData, icons: ICONS });
+
+          } else {
+              // User is not the admin of the group, deny access (possibly redirect)
+              res.render('pages/error', {
+                  errorMessage: 'You do not have access to group settings.',
+                  errorCode: 403,
+                  redirect: `/group?groupId=${groupId}` // Make sure groupId is properly set
+              });
+            
+          }
+      } else {
+          // Group ID not found, handle error (possibly redirect)
+          res.render('pages/error', {
+            errorMessage: 'Group not found.',
+            errorCode: 404,
+            redirect: `/home` // Make sure groupId is properly set
+        });
+      }
+  } else {
+      // User is not logged in, handle authentication (possibly redirect)
+      res.status(401).send('You need to login to access this page.');
+  }
+});
+
+
+app.put('/edit_group/:groupId', async (req, res) => {
+  const groupId = req.params.groupId;
+  const { group_name } = req.body; // Only retrieve the group_name from the request body
+
+  console.log(`Group ID: ${groupId}`);
+
+  console.log(`Req.body:`);
+  console.log(req.body);
+
+  // Validate input data
+  if (!group_name) {
+    return res.status(400).json({ error: "Group name must be provided." });
+  }
+
+  try {
+    // Check if the group exists
+    const groupQuery = `
+      SELECT * FROM groups WHERE group_id = $1;
+    `;
+    const group = await db.oneOrNone(groupQuery, groupId);
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found." });
+    }
+
+    // Check if the current user is the admin of the group
+    if (req.session.user.username !== group.admin_user) {
+      return res.status(403).json({ error: "You are not authorized to edit this group." });
+    }
+
+    // Update group name
+    const updateQuery = `
+      UPDATE groups
+      SET group_name = $1
+      WHERE group_id = $2
+      RETURNING *;
+    `;
+    const updatedGroup = await db.oneOrNone(updateQuery, [group_name, groupId]);
+
+    if (!updatedGroup) {
+      return res.status(404).json({ error: "Group not found." });
+    }
+
+    return res.status(200).json({ message: "Group name updated successfully.", group: updatedGroup });
+  } catch (error) {
+    console.error("Error updating group:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+
+
+
+app.delete('/delete_group', async (req, res) => {
+  const groupId = req.query.groupId;
+
+  // Validate groupId
+  if (!groupId) {
+    return res.status(400).json({ error: "groupId parameter is required." });
+  }
+
+  try {
+    // Check if the group exists
+    const groupQuery = `
+      SELECT * FROM groups WHERE group_id = $1;
+    `;
+    const group = await db.oneOrNone(groupQuery, groupId);
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found." });
+    }
+
+    // Check if the current user is the admin of the group
+    if (req.session.user.username !== group.admin_user) {
+      return res.status(403).json({ error: "You are not authorized to delete this group." });
+    }
+
+    // Delete related records in other tables (explicit cascading deletion)
+    await db.none('DELETE FROM users_to_groups WHERE group_id = $1', groupId);
+
+    // Delete records from groups_to_portfolios table
+    await db.none('DELETE FROM groups_to_portfolios WHERE group_id = $1', groupId);
+
+    // Delete portfolios associated with the deleted group and their stocks
+    const portfoliosQuery = `
+      SELECT portfolio_id FROM groups_to_portfolios WHERE group_id = $1;
+    `;
+    const portfolios = await db.manyOrNone(portfoliosQuery, groupId);
+
+    // Delete each portfolio and its associated stocks
+    await Promise.all(portfolios.map(async (portfolio) => {
+      await Promise.all([
+        db.none('DELETE FROM portfolios_to_stocks WHERE portfolio_id = $1', portfolio.portfolio_id),
+        db.none('DELETE FROM portfolios WHERE portfolio_id = $1', portfolio.portfolio_id)
+      ]);
+    }));
+
+    // Finally, delete the group
+    const deleteQuery = `
+      DELETE FROM groups 
+      WHERE group_id = $1
+      RETURNING *;
+    `;
+    const deletedGroup = await db.oneOrNone(deleteQuery, groupId);
+
+    if (!deletedGroup) {
+      return res.status(404).json({ error: "Failed to delete the group." });
+    }
+
+    return res.status(200).json({ message: "Group deleted successfully."});
+  } catch (error) {
+    console.error("Error deleting group:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+
+
+
+
+
+
 
 
 app.get('/group', async (req, res) => {
@@ -449,17 +603,19 @@ app.get('/group', async (req, res) => {
     const groupId = req.query.groupId;
 
 
-    console.log(`Group ID: ${groupId}`)
 
     // 1. Verify the user belongs to the group and throw permission error if not
     const userInGroup = await db.oneOrNone('SELECT * FROM users_to_groups WHERE user_id = $1 AND group_id = $2', [currentUser.username, groupId]);
     if (!userInGroup) {
-      return res.status(403).send('You do not have permission to access this group.');
+      res.render('pages/error', {
+          errorMessage: 'You do not have access to group.',
+          errorCode: 403,
+          redirect: `/groups` // Make sure groupId is properly set
+      });
     }
 
     // Get group data
     const groupData = await db.oneOrNone('SELECT * FROM groups WHERE group_id = $1', [groupId]);
-    console.log(groupData);
 
     // Get group icon
     groupData.iconFileName = getIconFilename(groupData.icon_num);
@@ -475,8 +631,6 @@ app.get('/group', async (req, res) => {
       AND gp.group_id = $1
     `, [groupId]);
 
-    console.log("All Portfolios:")
-    console.log(allPortfolios);
 
     // 3. For each portfolio, use getPortfolioValue to retrieve currentValue and topStock.
     // Additionally, add alternating background color using THEME_COLORS
@@ -488,8 +642,6 @@ app.get('/group', async (req, res) => {
       portfolioData.push({ ...portfolio, portfolioValue, topStock, backgroundColor });
     }
 
-    console.log("PortfolioData with portfolioValue and top stock:")
-    console.log(portfolioData);
 
     // 4. Assign a rank to each portfolio based on currentValue. #1 should get the highest currentValue
     portfolioData.sort((a, b) => b.portfolioValue - a.portfolioValue);
@@ -497,23 +649,14 @@ app.get('/group', async (req, res) => {
       portfolio.rank = index + 1;
     });
 
-    console.log("Portfolios with ranks:")
-    console.log(portfolioData);
 
     // 5. See if current user is admin user of the group. If true, pass
     const isAdmin = currentUser.username === portfolioData[0].user_id;
 
-    console.log(`isAdmin : ${isAdmin}`)
 
     // 6. Once rankings are assigned, split portfolios into two: userPortfolio and otherPortfolios
     const [userPortfolio] = portfolioData.filter(portfolio => portfolio.user_id === currentUser.username);
     const otherPortfolios = portfolioData.filter(portfolio => portfolio.user_id !== currentUser.username);
-
-    console.log("User Portfolio:")
-    console.log(userPortfolio);
-
-    console.log("Other portfolios:")
-    console.log(otherPortfolios);
 
     res.render('pages/group', { loggedIn: true, isAdmin, userPortfolio, otherPortfolios, groupData });
   } catch (error) {
@@ -542,7 +685,11 @@ app.get('/portfolio', async (req, res) => {
 
     // Determine if user matches the owner of the portfolio
     if (portfolioData.user_id !== userData.username) {
-      return res.status(404).json({ message: "Unauthorized access." });
+      res.render('pages/error', {
+        errorMessage: 'You do not have access to portfolio.',
+        errorCode: 403,
+        redirect: `/groups` 
+    });
     }
 
     // Fetch stock data from portfolios_to_stocks table for the specified portfolio
@@ -553,9 +700,9 @@ app.get('/portfolio', async (req, res) => {
     // Calculate current value for each stock
     for (const stock of stockData) {
       // Get current price for the stock symbol
-      console.log(stock.stock_symbol);
+
       const currentPrice = await getSymbolPrice(stock.stock_symbol);
-      console.log(currentPrice);
+
 
       const currStockValue = currentPrice * stock.num_shares;
 
@@ -584,15 +731,11 @@ app.get('/portfolio', async (req, res) => {
 
 app.post('/buyStock', async (req, res) => {
   try {
-    console.log('Buy stock request received:', req.body);
+
 
     const { portfolioId, stockSymbol, numStocks } = req.body;
     const username = req.session.user.username;
 
-    console.log('User:', username);
-    console.log('Portfolio ID:', portfolioId);
-    console.log('Stock Symbol:', stockSymbol);
-    console.log('Number of Stocks:', numStocks);
 
     // Check if the portfolio belongs to the current user
     const portfolioOwner = await db.oneOrNone('SELECT user_id FROM portfolios WHERE portfolio_id = $1', [portfolioId]);
@@ -604,29 +747,21 @@ app.post('/buyStock', async (req, res) => {
     // Fetch user's current liquidity from portfolios table
     const { current_liquidity } = await db.one('SELECT current_liquidity FROM portfolios WHERE portfolio_id = $1', [portfolioId]);
 
-    console.log('Current Liquidity:', current_liquidity);
-
     // Call Finnhub API to get current price of the stock
-    console.log('Fetching quote for symbol:', stockSymbol);
     const currentPrice = await getSymbolPrice(stockSymbol);
 
-    console.log('Current Price for', stockSymbol, 'is', currentPrice);
 
     // Calculate the cost of purchasing the specified number of shares
     const purchaseCost = currentPrice * numStocks;
 
-    console.log('Purchase Cost:', purchaseCost);
-
     // Check if user has enough liquidity for the purchase
     if (purchaseCost > current_liquidity) {
-      console.log('Insufficient funds for the purchase');
       return res.status(400).json({ message: "Insufficient funds for the purchase" });
     }
 
     // Deduct the purchase cost from user's current liquidity
     const newLiquidity = current_liquidity - purchaseCost;
 
-    console.log('New Liquidity after purchase:', newLiquidity);
 
     // Update user's current liquidity in the portfolios table
     await db.none('UPDATE portfolios SET current_liquidity = $1 WHERE portfolio_id = $2', [newLiquidity, portfolioId]);
@@ -657,20 +792,14 @@ app.post('/buyStock', async (req, res) => {
 
 app.post('/sellStock', async (req, res) => {
   try {
-    console.log('Sell stock request received:', req.body);
 
     const { portfolioId, stockSymbol, numStocks } = req.body;
     const username = req.session.user.username;
 
-    console.log('User:', username);
-    console.log('Portfolio ID:', portfolioId);
-    console.log('Stock Symbol:', stockSymbol);
-    console.log('Number of Stocks:', numStocks);
 
     // Check if the portfolio belongs to the current user
     const portfolioOwner = await db.oneOrNone('SELECT user_id FROM portfolios WHERE portfolio_id = $1', [portfolioId]);
     if (!portfolioOwner || portfolioOwner.user_id !== username) {
-      console.log('Unauthorized access to portfolio');
       return res.status(403).json({ message: "Unauthorized access to portfolio" });
     }
 
@@ -686,20 +815,16 @@ app.post('/sellStock', async (req, res) => {
     }
 
     // Call Finnhub API to get current price of the stock
-    console.log('Fetching quote for symbol:', stockSymbol);
     const currentPrice = await getSymbolPrice(stockSymbol);
 
-    console.log('Current Price for', stockSymbol, 'is', currentPrice);
 
     // Calculate the value of the sold stocks
     const saleValue = currentPrice * numStocks;
 
-    console.log('Sale Value:', saleValue);
 
     // Add the sale value to user's current liquidity
     const newLiquidity = current_liquidity + saleValue;
 
-    console.log('New Liquidity after sale:', newLiquidity);
 
     // Update user's current liquidity in the portfolios table
     await db.none('UPDATE portfolios SET current_liquidity = $1 WHERE portfolio_id = $2', [newLiquidity, portfolioId]);
@@ -714,7 +839,6 @@ app.post('/sellStock', async (req, res) => {
       await db.none('UPDATE portfolios_to_stocks SET num_shares = $1 WHERE portfolio_id = $2 AND stock_symbol = $3', [updatedShares, portfolioId, stockSymbol]);
     }
 
-    console.log('Stock sold successfully');
 
     // Respond with status 200 for success
     res.status(200).json({ message: "Stock sold successfully" });

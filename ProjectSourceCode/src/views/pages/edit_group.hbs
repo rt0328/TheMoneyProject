@@ -1,56 +1,77 @@
 <div class="container mt-3">
     <h1>Edit Group</h1>
-    <form action="/edit_group" method="POST">
+    <form id="editGroupForm">
         <div class="mb-1">
             <label class="form-label" for="groupname">Group Name:</label>
-            <input class="form-control" type="text" name="groupname" id="groupname" /><br />
+            <input class="form-control" type="text" name="groupname" id="groupname" value="{{ groupData.group_name }}" /><br />
         </div>
-        <!-- Icon selection grid -->
-        <div class="mb-1">
-            <label class="form-label">Select Icon:</label>
-            <div class="container">
-                <div class="row row-cols-2 row-cols-md-5 g-3">
-                    {{#each icons}}
-                    <div class="col">
-                        <!-- Add a wrapper div to make each icon square -->
-                        <div class="square-icon">
-                            <img class="small-icon img-fluid" src="/images/{{filename}}" alt="{{filename}}" data-iconnum="{{icon_num}}">
-                        </div>
-                    </div>
-                    {{/each}}
-                </div>
-            </div>
-        </div>
-        <!-- End of icon selection grid -->
-        <!-- Hidden input field for icon_num -->
-        <input type="hidden" id="icon_num" name="icon_num" value="">
         <div class="my-3"></div>
-        <button class="btn btn-primary rounded-pill" type="submit">Submit</button>
+        <button class="btn btn-primary" type="submit">Save Changes</button>
+        <button id="deleteGroupBtn" class="btn btn-danger" data-groupid="{{ groupData.group_id }}">Delete Group</button>
         <br/>
     </form>
 </div>
 
+
+
+
 <script>
-    // Script to handle icon selection
     document.addEventListener('DOMContentLoaded', function() {
-        const smallIcons = document.querySelectorAll('.small-icon');
+        const editGroupForm = document.getElementById('editGroupForm');
+        const deleteGroupBtn = document.getElementById('deleteGroupBtn');
 
-        smallIcons.forEach(icon => {
-            icon.addEventListener('click', function() {
-                // Remove the blue rim from previously selected icon, if any
-                const prevSelectedIcon = document.querySelector('.small-icon.blue-rim');
-                if (prevSelectedIcon) {
-                    prevSelectedIcon.classList.remove('blue-rim');
+        // Handle form submission
+        editGroupForm.addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission behavior
+
+            const groupId = deleteGroupBtn.dataset.groupid; // Retrieve groupId from data attribute
+            const group_name = document.getElementById('groupname').value;
+
+            try {
+                const response = await fetch(`/edit_group/${groupId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ group_name })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert(data.message);
+                    // Redirect or update UI as needed
+                } else {
+                    alert(data.error);
                 }
+            } catch (error) {
+                console.error("Error updating group:", error);
+                alert("An error occurred while updating the group.");
+            }
+        });
 
-                // Add blue rim to the clicked icon
-                icon.classList.add('blue-rim');
-                
-                // Set the value of the hidden input field to the selected icon's icon_num
-                const iconNum = icon.dataset.iconnum;
-                document.querySelector('#icon_num').value = iconNum;
-            });
+        // Handle group deletion
+        deleteGroupBtn.addEventListener('click', async function(event) {
+            event.preventDefault(); // Prevent default button behavior
+
+            const confirmation = confirm("Are you sure you want to delete this group?");
+            if (confirmation) {
+                try {
+                    const groupId = deleteGroupBtn.dataset.groupid; // Retrieve groupId from data attribute
+                    const response = await fetch(`/delete_group?groupId=${groupId}`, {
+                        method: 'DELETE'
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        alert(data.message);
+                        // Redirect to /groups upon successful deletion
+                        window.location.href = '/groups';
+                    } else {
+                        alert(data.error);
+                    }
+                } catch (error) {
+                    console.error("Error deleting group:", error);
+                    alert("An error occurred while deleting the group.");
+                }
+            }
         });
     });
 </script>
-

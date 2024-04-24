@@ -397,6 +397,7 @@ function handleBuyStockFormSubmission(event) {
 }
 
 
+
 // Function to handle selling stock form submission
 function handleSellStockFormSubmission(event) {
     event.preventDefault();
