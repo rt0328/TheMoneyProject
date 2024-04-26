@@ -124,7 +124,9 @@ async function openActionModal(typeId, stockSymbol) {
             <div id="search-results"></div> <!-- Container for search results -->
         `;
   
-        // Add event listener for searching stock when the search button is clicked
+        // Add event listener for searching stock when the form is submitted
+        form.removeAttribute("method")
+        form.addEventListener('submit', searchStock);
         document.getElementById('search-button').addEventListener('click', searchStock);
 
         // Hide the submit button
