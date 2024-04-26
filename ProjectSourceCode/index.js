@@ -125,6 +125,7 @@ app.use(
     secret: process.env.SESSION_SECRET,
     saveUninitialized: false,
     resave: false,
+    loggedIn: false
   })
 );
 
@@ -148,8 +149,6 @@ module.exports = app.listen(3000, ()=>{
 
 // -------------------------------------  ROUTES   ----------------------------------------------
 
-var loggedIn = false;
-
 // Redirect / to home page
 app.get('/', (req, res) => {
   res.redirect('/home');
@@ -157,24 +156,10 @@ app.get('/', (req, res) => {
 
 // Home page
 app.get('/home', (req, res) => {
-  res.render('pages/home', { loggedIn: loggedIn , homePage: true});
+  res.render('pages/home', { loggedIn: req.session.loggedIn , homePage: true});
 });
 
 // -------------------------  Login / Authentication   ----------------------------------
-
-
-// Authentication Middleware.
-const auth = (req, res, next) => {
-  if (!req.session.user) {
-    // Default to login page.
-    loggedIn = false;
-    return res.redirect('/login');
-  }
-  next();
-  loggedIn = true;
-};
-
-app.use(auth);
 
 
 
@@ -228,6 +213,24 @@ app.post('/login', async (req, res) => {
     res.status(404).render('pages/login', { message: 'An error occurred. Please try again later.' });
   }
 });
+
+const auth = (req, res, next) => {
+  if (!req.session.user && req.originalUrl !== '/register') {
+    // User is not logged in and not accessing the register page, redirect to login page
+    return res.redirect('/login');
+  }
+
+  // User is logged in, set loggedIn state in session
+  req.session.loggedIn = true;
+  next();
+};
+
+
+
+app.use(auth);
+
+
+
 
 
 // -------------------------  Register   ----------------------------------
@@ -283,7 +286,7 @@ app.get('/logout', (req, res) => {
       res.send("Error logging out"); 
     } else {
       // Session destroyed, render the logout page with a success message
-      loggedIn = false;
+      req.session.loggedIn = false;
       res.render('pages/logout', { logoutPage: true, message: 'Logged out Successfully' });
     }
   });
@@ -317,7 +320,7 @@ app.get('/groups', async (req, res) => {
     });
 
     // Fetch current portfolio value and ranking for each group
-    res.render('pages/groups', { groupData, loggedIn: true });
+    res.render('pages/groups', { groupData, loggedIn: req.session.loggedIn });
 
   } catch (error) {
     // Handle error
@@ -331,13 +334,13 @@ app.get('/groups', async (req, res) => {
 
 
 app.get('/create_group', async (req, res) => {
-  res.render('pages/create_group', { loggedIn: true, icons: ICONS });
+  res.render('pages/create_group', { loggedIn: req.session.loggedIn, icons: ICONS });
 });
 
 
 app.post('/create_group', async (req, res) => {
   if (req.body.groupname === '' || req.body.startingliquidity === '' || req.body.icon_num === '') {
-      res.status(400).render('pages/create_group', { loggedIn: true, icons: ICONS, message: "Please enter a group name, starting liquidity, and select an icon", error: 1 });
+      res.status(400).render('pages/create_group', { loggedIn: req.session.loggedIn, icons: ICONS, message: "Please enter a group name, starting liquidity, and select an icon", error: 1 });
   } else {
       try {
           // Function to generate a unique group code
@@ -369,7 +372,7 @@ app.post('/create_group', async (req, res) => {
           const groupCodeExists = await db.oneOrNone('SELECT group_code FROM groups WHERE group_code = $1', [groupCode]);
           if (groupCodeExists) {
               // Group Code already exists, throw error
-              return res.status(400).render('pages/create_group', { loggedIn: true, icons: ICONS, message: "Group code already exists. Please try again.", error: 1 });
+              return res.status(400).render('pages/create_group', { loggedIn: req.session.loggedIn, icons: ICONS, message: "Group code already exists. Please try again.", error: 1 });
           }
 
           // Insert the group into the database
@@ -397,7 +400,7 @@ app.post('/create_group', async (req, res) => {
 
 app.get('/group_code', async (req,res) => {
   const groupCode = req.query.groupCode;
-  res.render('pages/group_code', { loggedIn: true, groupCode : groupCode });
+  res.render('pages/group_code', { loggedIn: req.session.loggedIn, groupCode : groupCode });
 });
 
 
@@ -405,7 +408,7 @@ app.get('/group_code', async (req,res) => {
 
 
 app.get('/join_group', (req, res) => {
-  res.render('pages/join_group', {loggedIn : true});
+  res.render('pages/join_group', {loggedIn : req.session.loggedIn});
 });
 
 // Route to handle joining a group
@@ -425,7 +428,7 @@ app.post('/join_group', async (req, res) => {
     const userInGroup = await db.oneOrNone('SELECT * FROM users_to_groups WHERE user_id = $1 AND group_id = $2', [username, group.group_id]);
     if (userInGroup) {
       // User is already in the group, throw error
-      return res.render('pages/join_group', { message: 'You are already in the group.', loggedIn: true , error : true});
+      return res.render('pages/join_group', { message: 'You are already in the group.', loggedIn: req.session.loggedIn , error : true});
     }
 
     // Add user to the group
@@ -441,7 +444,7 @@ app.post('/join_group', async (req, res) => {
   } catch (error) {
     console.error('Error joining group:', error);
     // Error joining group
-    return res.render('pages/join_group', { message: 'Failure to join group.', loggedIn: true , error : true});
+    return res.render('pages/join_group', { message: 'Failure to join group.', loggedIn: req.session.loggedIn , error : true});
   }
 });
 
@@ -466,7 +469,7 @@ app.get('/edit_group', async (req, res) => {
           // Check if the current user matches the admin user of the group
           if (req.session.user.username === adminUser) {
               // User is the admin of the group
-              res.render('pages/edit_group', { loggedIn: true, groupData, icons: ICONS });
+              res.render('pages/edit_group', { loggedIn: req.session.loggedIn, groupData, icons: ICONS });
 
           } else {
               // User is not the admin of the group, deny access
@@ -680,7 +683,7 @@ app.get('/group', async (req, res) => {
     const [userPortfolio] = portfolioData.filter(portfolio => portfolio.user_id === currentUser.username);
     const otherPortfolios = portfolioData.filter(portfolio => portfolio.user_id !== currentUser.username);
 
-    res.render('pages/group', { loggedIn: true, isAdmin, userPortfolio, otherPortfolios, groupData });
+    res.render('pages/group', { loggedIn: req.session.loggedIn, isAdmin, userPortfolio, otherPortfolios, groupData });
   } catch (error) {
     console.error('Error fetching group data:', error);
     res.status(500).send('Internal Server Error');
@@ -739,7 +742,7 @@ app.get('/portfolio', async (req, res) => {
 
     // Pass information into the portfolio page
     res.render('pages/portfolio', { 
-      loggedIn: true,
+      loggedIn: req.session.loggedIn,
       currentLiquidity: currentLiquidity,
       userStocks: stockData,
       currPortfolioValue: formatDollarAmount(currPortfolioValue),
