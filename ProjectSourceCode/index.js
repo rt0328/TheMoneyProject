@@ -1,3 +1,4 @@
+// Theme colors for group and player rankings
 const THEME_COLORS = [
   {
     "color" : "green",
@@ -17,6 +18,7 @@ const THEME_COLORS = [
   },
 ]
 
+// Group icons - icon_num corresponds to group table and filename corresponds to relative path in project
 const ICONS = [
   {
     "filename" : "bezos.png",
@@ -74,7 +76,7 @@ const url = require('url');
 
 // -------------------------------------  APP CONFIG   ----------------------------------------------
 
-// Create `ExpressHandlebars` instance with the default layout and configure the layouts and partials dir.
+// Handlebars Configuration
 const hbs = handlebars.create({
   extname: '.hbs', // Make sure you have the dot before 'hbs'
   defaultLayout: 'main',
@@ -84,32 +86,30 @@ const hbs = handlebars.create({
 
 
 
-// database configuration
+// DB Configuration
 const dbConfig = {
-  host: 'db', // the database server
-  port: 5432, // the database port
-  database: process.env.POSTGRES_DB, // the database name
-  user: process.env.POSTGRES_USER, // the user account to connect with
-  password: process.env.POSTGRES_PASSWORD, // the password of the user account
+  host: 'db', 
+  port: 5432, 
+  database: process.env.POSTGRES_DB, 
+  user: process.env.POSTGRES_USER, 
+  password: process.env.POSTGRES_PASSWORD, 
 };
 
+// Use pgp with db config
 const db = pgp(dbConfig);
 
-// test your database
+// Connect to database
 db.connect()
-  .then(obj => {
-    console.log('Database connection successful'); // you can view this message in the docker compose logs
-    obj.done(); // success, release the connection;
-  })
-  .catch(error => {
-    console.log('ERROR:', error.message || error);
-  });
+.then(obj => {
+  console.log('Database connection successful'); 
+  obj.done(); 
+})
+.catch(error => {
+  console.log('ERROR:', error.message || error);
+});
 
 
-
-
-
-// Register `hbs` as our view engine using its bound `engine()` function.
+// Set up hbs, directory, views, and public folders with express
 app.use(express.static(__dirname + '/src/'));
 app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
@@ -119,7 +119,7 @@ app.use(express.static('public'));
 
 
 
-
+// Define session variables
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -134,21 +134,15 @@ app.use(
   })
 );
 
-// If you are using express-session, uncomment the session setup as well
-
-
 
 
 
 // -------------------------------------  START THE SERVER   ----------------------------------------------
 
 
-//testing module
 module.exports = app.listen(3000, ()=>{
   console.log('Server is listening on port 3000');
 });
-
-
 
 
 
@@ -156,17 +150,38 @@ module.exports = app.listen(3000, ()=>{
 
 var loggedIn = false;
 
+// Redirect / to home page
 app.get('/', (req, res) => {
   res.redirect('/home');
 });
+
+// Home page
+app.get('/home', (req, res) => {
+  res.render('pages/home', { loggedIn: loggedIn , homePage: true});
+});
+
+// -------------------------  Login / Authentication   ----------------------------------
+
+
+// Authentication Middleware.
+const auth = (req, res, next) => {
+  if (!req.session.user) {
+    // Default to login page.
+    loggedIn = false;
+    return res.redirect('/login');
+  }
+  next();
+  loggedIn = true;
+};
+
+app.use(auth);
+
+
 
 app.get('/login', (req, res) => {
   res.render('pages/login', { loginPage: true });
 });
 
-app.get('/home', (req, res) => {
-    res.render('pages/home', { loggedIn: loggedIn , homePage: true});
-});
 
 
 app.post('/login', async (req, res) => {
@@ -178,6 +193,7 @@ app.post('/login', async (req, res) => {
       if (user) {
         const match = await bcrypt.compare(password, user.password);
         if (match) {
+          // Password matches
           return { status: 'success', user };
         } else {
           // Password does not match
@@ -196,22 +212,25 @@ app.post('/login', async (req, res) => {
   const result = await loginUser(username, password);
 
   if (result.status === 'success') {
-    // If the user is found and password matches, redirect to /portfolio route after setting the session.
+    // User exists and password matches, save session and redirect to portfolio
     req.session.user = result.user;
     req.session.save(() => {
       res.redirect('/groups');
     });
   } else if (result.status === 'passwordIncorrect') {
-    // If the user exists and the password doesn't match, render the login page with a message.
+    // User exists but password doesn't match
     res.status(400).render('pages/login', { message: 'Incorrect username or password.', error: 1 });
   } else if (result.status === 'userNotFound') {
-    
+    // User not found
     res.status(302).render('pages/register', { message: 'User not found. Please register.', error: 1 });
   } else {
-    // For any other errors, render the login page with a generic error message.
+    // Generic error
     res.status(404).render('pages/login', { message: 'An error occurred. Please try again later.' });
   }
 });
+
+
+// -------------------------  Register   ----------------------------------
 
 app.get('/register', (req, res) => {
   res.render('pages/register', {registerPage: true});
@@ -219,7 +238,7 @@ app.get('/register', (req, res) => {
 
 
 app.post('/register', async (req, res) => {
-  //hash the password using bcrypt library
+  // Hash the password using bcrypt library
   if (req.body.password === '' || req.body.username === '') {
     res.status(400).render('pages/register', {message: "Please enter a username and password", error: 1});
 
@@ -227,7 +246,7 @@ app.post('/register', async (req, res) => {
   else {
     const hash = await bcrypt.hash(req.body.password, 10)
 
-    // To-DO: Insert username and hashed password into the 'users' table
+    // Insert username and hashed password into the 'users' table
     const insertUser = async (username, hash) => {
       try {
         await db.none('INSERT INTO users(username, password) VALUES ($1, $2)', [username, hash]);
@@ -241,25 +260,17 @@ app.post('/register', async (req, res) => {
     const success = await insertUser(req.body.username, hash);
 
     if (success) {
+      // Successfully added user
       res.status(302).render('pages/login',{message: "User Added Successfully"});
     } else {
+      // Error inserting user due to already exisiting 
       res.status(400).render('pages/register',{message: "Username already taken. Please try a new username.", error: 1});
     }
   }
 });
 
-// Authentication Middleware.
-const auth = (req, res, next) => {
-  if (!req.session.user) {
-    // Default to login page.
-    loggedIn = false;
-    return res.redirect('/login');
-  }
-  next();
-  loggedIn = true;
-};
 
-app.use(auth);
+// -------------------------  Logout  ----------------------------------
 
 
 app.get('/logout', (req, res) => {
@@ -267,8 +278,9 @@ app.get('/logout', (req, res) => {
   // Destroy the session
   req.session.destroy((err) => {
     if (err) {
+      // Error logging out
       console.log('Session Destroy Error:', err);
-      res.send("Error logging out"); // Optionally, handle errors more gracefully
+      res.send("Error logging out"); 
     } else {
       // Session destroyed, render the logout page with a success message
       loggedIn = false;
@@ -276,6 +288,8 @@ app.get('/logout', (req, res) => {
     }
   });
 });
+
+// -------------------------  Groups  ----------------------------------
 
 
 
@@ -303,9 +317,8 @@ app.get('/groups', async (req, res) => {
     });
 
     // Fetch current portfolio value and ranking for each group
-
-
     res.render('pages/groups', { groupData, loggedIn: true });
+
   } catch (error) {
     // Handle error
     console.error('Error fetching group data:', error);
@@ -314,7 +327,7 @@ app.get('/groups', async (req, res) => {
 });
 
 
-
+// -------------------------  Create Group  ----------------------------------
 
 
 app.get('/create_group', async (req, res) => {
@@ -355,7 +368,7 @@ app.post('/create_group', async (req, res) => {
           // Check if the group code already exists
           const groupCodeExists = await db.oneOrNone('SELECT group_code FROM groups WHERE group_code = $1', [groupCode]);
           if (groupCodeExists) {
-              // If the group code exists, render an error message
+              // Group Code already exists, throw error
               return res.status(400).render('pages/create_group', { loggedIn: true, icons: ICONS, message: "Group code already exists. Please try again.", error: 1 });
           }
 
@@ -387,6 +400,10 @@ app.get('/group_code', async (req,res) => {
   res.render('pages/group_code', { loggedIn: true, groupCode : groupCode });
 });
 
+
+// -------------------------  Join Group  ----------------------------------
+
+
 app.get('/join_group', (req, res) => {
   res.render('pages/join_group', {loggedIn : true});
 });
@@ -400,14 +417,14 @@ app.post('/join_group', async (req, res) => {
     // Check if the group with the provided code exists
     const group = await db.oneOrNone('SELECT * FROM groups WHERE group_code = $1', [groupCode]);
     if (!group) {
-      // Group not found, send JSON response with an error message
+      // Group not found
       return res.render('pages/join_group', { message: 'This group does not exist!', loggedIn: true , error : true});
     }
 
     // Check if the user is already in the group
     const userInGroup = await db.oneOrNone('SELECT * FROM users_to_groups WHERE user_id = $1 AND group_id = $2', [username, group.group_id]);
     if (userInGroup) {
-      // User is already in the group, send JSON response with an error message
+      // User is already in the group, throw error
       return res.render('pages/join_group', { message: 'You are already in the group.', loggedIn: true , error : true});
     }
 
@@ -420,14 +437,16 @@ app.post('/join_group', async (req, res) => {
     // Connect the group to the new portfolio
     await db.none('INSERT INTO groups_to_portfolios (group_id, portfolio_id) VALUES ($1, $2)', [group.group_id, portfolioId]);
 
-    // Send JSON response indicating success
     return res.redirect('/groups')
   } catch (error) {
     console.error('Error joining group:', error);
-    // Send JSON response with error message
+    // Error joining group
     return res.render('pages/join_group', { message: 'Failure to join group.', loggedIn: true , error : true});
   }
 });
+
+
+// -------------------------  Edit Group  ----------------------------------
 
 app.get('/edit_group', async (req, res) => {
   // Retrieve the group ID from the request query
@@ -435,38 +454,39 @@ app.get('/edit_group', async (req, res) => {
 
   // Check if the current user is logged in
   if (req.session.user) {
-      // Query the groups table to check if the current user is the admin of the specified group
+      // Get the group based on group_id
       const groupData = await db.oneOrNone('SELECT * FROM groups WHERE group_id = $1', [groupId]);
       
-      // Check if the query returned a result
+      // Check if group found
       if (groupData) {
-          // Extract the admin user of the group from the query result
+
+          // Get admin of group
           const adminUser = groupData.admin_user;
           
           // Check if the current user matches the admin user of the group
           if (req.session.user.username === adminUser) {
-              // User is the admin of the group, render the edit_group page
+              // User is the admin of the group
               res.render('pages/edit_group', { loggedIn: true, groupData, icons: ICONS });
 
           } else {
-              // User is not the admin of the group, deny access (possibly redirect)
+              // User is not the admin of the group, deny access
               res.render('pages/error', {
                   errorMessage: 'You do not have access to group settings.',
                   errorCode: 403,
-                  redirect: `/group?groupId=${groupId}` // Make sure groupId is properly set
+                  redirect: `/group?groupId=${groupId}`
               });
             
           }
       } else {
-          // Group ID not found, handle error (possibly redirect)
+          // Group ID not found, handle error 
           res.render('pages/error', {
             errorMessage: 'Group not found.',
             errorCode: 404,
-            redirect: `/home` // Make sure groupId is properly set
+            redirect: `/home` 
         });
       }
   } else {
-      // User is not logged in, handle authentication (possibly redirect)
+      // User is not logged in, handle authentication
       res.status(401).send('You need to login to access this page.');
   }
 });
@@ -474,7 +494,7 @@ app.get('/edit_group', async (req, res) => {
 
 app.put('/edit_group/:groupId', async (req, res) => {
   const groupId = req.params.groupId;
-  const { group_name } = req.body; // Only retrieve the group_name from the request body
+  const { group_name } = req.body; 
 
   console.log(`Group ID: ${groupId}`);
 
@@ -523,6 +543,9 @@ app.put('/edit_group/:groupId', async (req, res) => {
 });
 
 
+// -------------------------  Delete Group  ----------------------------------
+
+
 
 
 app.delete('/delete_group', async (req, res) => {
@@ -549,7 +572,7 @@ app.delete('/delete_group', async (req, res) => {
       return res.status(403).json({ error: "You are not authorized to delete this group." });
     }
 
-    // Delete related records in other tables (explicit cascading deletion)
+    // Delete related records in other tables
     await db.none('DELETE FROM users_to_groups WHERE group_id = $1', groupId);
 
     // Delete records from groups_to_portfolios table
@@ -591,8 +614,7 @@ app.delete('/delete_group', async (req, res) => {
 
 
 
-
-
+// -------------------------  Group  ----------------------------------
 
 
 
@@ -604,13 +626,13 @@ app.get('/group', async (req, res) => {
 
 
 
-    // 1. Verify the user belongs to the group and throw permission error if not
+    // Verify the user belongs to the group and throw permission error if not
     const userInGroup = await db.oneOrNone('SELECT * FROM users_to_groups WHERE user_id = $1 AND group_id = $2', [currentUser.username, groupId]);
     if (!userInGroup) {
       res.render('pages/error', {
           errorMessage: 'You do not have access to group.',
           errorCode: 403,
-          redirect: `/groups` // Make sure groupId is properly set
+          redirect: `/groups` 
       });
     }
 
@@ -632,7 +654,7 @@ app.get('/group', async (req, res) => {
     `, [groupId]);
 
 
-    // 3. For each portfolio, use getPortfolioValue to retrieve currentValue and topStock.
+    // For each portfolio, use getPortfolioValue to retrieve currentValue and topStock.
     // Additionally, add alternating background color using THEME_COLORS
     const portfolioData = [];
     for (const portfolio of allPortfolios) {
@@ -643,18 +665,18 @@ app.get('/group', async (req, res) => {
     }
 
 
-    // 4. Assign a rank to each portfolio based on currentValue. #1 should get the highest currentValue
+    // Assign a rank to each portfolio based on currentValue. #1 should get the highest currentValue
     portfolioData.sort((a, b) => b.portfolioValue - a.portfolioValue);
     portfolioData.forEach((portfolio, index) => {
       portfolio.rank = index + 1;
     });
 
 
-    // 5. See if current user is admin user of the group. If true, pass
+    // See if current user is admin user of the group. If true, pass
     const isAdmin = currentUser.username === portfolioData[0].user_id;
 
 
-    // 6. Once rankings are assigned, split portfolios into two: userPortfolio and otherPortfolios
+    // Once rankings are assigned, split portfolios into two: userPortfolio and otherPortfolios
     const [userPortfolio] = portfolioData.filter(portfolio => portfolio.user_id === currentUser.username);
     const otherPortfolios = portfolioData.filter(portfolio => portfolio.user_id !== currentUser.username);
 
@@ -667,13 +689,13 @@ app.get('/group', async (req, res) => {
 
 
 
-
+// -------------------------  Portfolio  ----------------------------------
 
 
 
 app.get('/portfolio', async (req, res) => {
   try {
-    // Get user's current liquidity (money in users table)
+    // Get user's current liquidity 
     const user = req.session.user;
     const portfolioId = req.query.portfolioId || req.session.portfolioId;
 
@@ -727,6 +749,11 @@ app.get('/portfolio', async (req, res) => {
     res.status(500);
   }
 });
+
+
+
+// -------------------------  Portfolio - Manage Assets  ----------------------------------
+
 
 
 app.post('/buyStock', async (req, res) => {
@@ -853,7 +880,7 @@ app.post('/sellStock', async (req, res) => {
 
 
 
-// -------------------------------------  API   ----------------------------------------------
+// -------------------------------------  API & Helper Functions  ----------------------------------------------
 
 require('dotenv').config();
 
@@ -972,22 +999,3 @@ async function getPortfolioValue(portfolio) {
   return { portfolioValue: formatDollarAmount(currPortfolioValue), topStock };
 }
 
-
-async function getCurrentRanking(groupId, user) {
-  try {
-    // Fetch all portfolios for the group
-    const portfolios = await db.manyOrNone('SELECT * FROM groups_to_portfolios WHERE group_id = $1', [groupId]);
-
-    // Calculate ranking based on portfolio value
-    portfolios.sort((a, b) => b.portfolio_value - a.portfolio_value);
-
-    // Find index of current user's portfolio
-    const currentUserIndex = portfolios.findIndex(portfolio => portfolio.user_id === user.username);
-
-    // Add 1 to index to get ranking
-    return currentUserIndex + 1;
-  } catch (error) {
-    console.error('Error calculating current ranking:', error);
-    throw error;
-  }
-}
